@@ -1,0 +1,13 @@
+{
+  "name": "MIRRORA Style Studio",
+  "short_name": "MIRRORA",
+  "description": "Tu estudio de estilo personal. Descubre looks, crea tu avatar, combina y llévatelo en tu móvil.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4efe7",
+  "theme_color": "#161412",
+  "lang": "es",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

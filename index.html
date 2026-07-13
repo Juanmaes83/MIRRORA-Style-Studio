@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>MIRRORA Style Studio</title>
+  <meta name="description" content="Tu estudio de estilo personal. Descubre looks, crea tu avatar, combina y llévatelo en tu móvil." />
+  <meta name="theme-color" content="#161412" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/mirrora.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="wordmark" href="#" data-nav="home" aria-label="MIRRORA, inicio">
+        <span class="wordmark-m">M</span>IRRORA
+        <span class="wordmark-sub">Style Studio</span>
+      </a>
+      <nav class="mainnav" aria-label="Secciones">
+        <button class="navlink is-active" data-nav="home">Inicio</button>
+        <button class="navlink" data-nav="catalog">Colección</button>
+        <button class="navlink" data-nav="studio">Estudio</button>
+        <button class="navlink" data-nav="looks">Looks <span class="badge" id="badge-looks" hidden></span></button>
+        <button class="navlink" data-nav="wishlist">Wishlist <span class="badge" id="badge-wishlist" hidden></span></button>
+      </nav>
+    </div>
+    <div id="campaign-banner" class="campaign-banner" hidden></div>
+  </header>
+
+  <main id="app">
+
+    <!-- ============ HOME / HERO ============ -->
+    <section class="view view-home is-active" data-view="home">
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="hero-eyebrow">Colección piloto · Bolsos</p>
+          <h1 class="hero-title">Tu estilo,<br /><em>reflejado.</em></h1>
+          <p class="hero-lead">
+            Descubre la colección, crea tu identidad de estilo, combínala sobre tu avatar
+            y llévate tus looks en el móvil. Sin foto, sin espera, sin fricción.
+          </p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" data-nav="catalog">Descubrir la colección</button>
+            <button class="btn btn-ghost" data-nav="studio">Crear mi avatar</button>
+          </div>
+        </div>
+        <div class="hero-stage" id="hero-stage" aria-hidden="true"></div>
+      </div>
+
+      <div class="home-steps">
+        <div class="step"><span class="step-n">01</span><h3>Descubre</h3><p>Explora la colección y marca lo que te habla.</p></div>
+        <div class="step"><span class="step-n">02</span><h3>Crea tu avatar</h3><p>Silueta, tono, pelo y estilo. Tu identidad, sin foto.</p></div>
+        <div class="step"><span class="step-n">03</span><h3>Combina</h3><p>Prueba piezas y complementos en la órbita del estudio.</p></div>
+        <div class="step"><span class="step-n">04</span><h3>Llévatelo</h3><p>Guarda el look, escanéalo con QR y pásalo al carrito.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ CATALOG ============ -->
+    <section class="view" data-view="catalog">
+      <div class="view-head">
+        <h2>La colección</h2>
+        <p>Piloto de categoría: bolsos. Toca una pieza para probarla en el estudio.</p>
+      </div>
+      <div class="catalog-grid" id="catalog-grid"></div>
+    </section>
+
+    <!-- ============ STUDIO ============ -->
+    <section class="view" data-view="studio">
+      <div class="studio-layout">
+
+        <aside class="studio-panel avatar-panel">
+          <h2 class="panel-title">Tu avatar</h2>
+          <p class="panel-sub">Nivel 1 · editorial, sin foto</p>
+          <div id="avatar-controls"></div>
+        </aside>
+
+        <div class="studio-stage">
+          <div class="orbit-wrap">
+            <div class="orbit-ring" id="orbit-ring" aria-label="Órbita de combinaciones"></div>
+            <div class="avatar-stage" id="avatar-stage"></div>
+          </div>
+          <p class="orbit-hint">Órbita de combinaciones — toca un complemento para añadirlo al look</p>
+        </div>
+
+        <aside class="studio-panel selection-panel">
+          <div class="envelope" id="selection-envelope">
+            <div class="envelope-flap"></div>
+            <h2 class="panel-title">Sobre de selección</h2>
+            <div id="selection-contents"></div>
+            <div class="envelope-actions">
+              <button class="btn btn-primary btn-block" id="btn-save-look">Guardar look</button>
+              <button class="btn btn-ghost btn-block" id="btn-clear-look">Vaciar</button>
+            </div>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+    <!-- ============ LOOKS ============ -->
+    <section class="view" data-view="looks">
+      <div class="view-head">
+        <h2>Mis looks</h2>
+        <p>Tus recuerdos de estilo. Escanéalos para llevarlos al móvil o pásalos al carrito.</p>
+      </div>
+      <div class="looks-grid" id="looks-grid"></div>
+    </section>
+
+    <!-- ============ WISHLIST ============ -->
+    <section class="view" data-view="wishlist">
+      <div class="view-head">
+        <h2>Wishlist</h2>
+        <p>Las piezas que te han hablado.</p>
+      </div>
+      <div class="catalog-grid" id="wishlist-grid"></div>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <p><strong>MIRRORA</strong> Style Studio · experiencia white-label ·
+      <span id="foot-brand"></span></p>
+    <p class="foot-legal">Avatar editorial sin datos biométricos. Las imágenes de prueba son una
+      interpretación visual y no garantizan talla ni ajuste físico.</p>
+  </footer>
+
+  <!-- QR modal -->
+  <div class="modal-backdrop" id="qr-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title">
+      <button class="modal-close" id="qr-modal-close" aria-label="Cerrar">×</button>
+      <h3 id="qr-modal-title">Llévatelo en tu móvil</h3>
+      <div class="qr-holder" id="qr-holder"></div>
+      <p class="qr-caption" id="qr-caption"></p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="js/lib/qrcode.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

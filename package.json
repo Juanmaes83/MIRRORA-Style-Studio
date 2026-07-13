@@ -1,0 +1,9 @@
+{
+  "name": "mirrora-style-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MIRRORA Style Studio — PWA de decisión y conversión para moda",
+  "scripts": {
+    "dev": "npx serve . -l 4180"
+  }
+}
