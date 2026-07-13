@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MIRRORA · Consola de marca</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/mirrora.css" />
+  <link rel="stylesheet" href="css/console.css" />
+</head>
+<body class="console-body">
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="wordmark" href="console.html" aria-label="Consola de marca MIRRORA">
+        <span class="wordmark-m">M</span>IRRORA
+        <span class="wordmark-sub">Consola de marca</span>
+      </a>
+      <nav class="mainnav">
+        <a class="navlink" href="index.html" target="mirrora-preview">Abrir PWA</a>
+        <button class="navlink" id="btn-export">Exportar config</button>
+        <label class="navlink navlink-file">Importar<input type="file" id="input-import" accept=".json" hidden /></label>
+        <button class="navlink navlink-danger" id="btn-reset">Restablecer demo</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="console-layout">
+
+    <!-- ============ FORM ============ -->
+    <section class="console-panel">
+      <h2 class="panel-title">Identidad</h2>
+      <div class="field"><label for="f-name">Nombre de marca</label><input id="f-name" type="text" /></div>
+      <div class="field-row">
+        <div class="field"><label for="f-brandId">Brand ID</label><input id="f-brandId" type="text" /></div>
+        <div class="field"><label for="f-campaignId">Campaña</label><input id="f-campaignId" type="text" /></div>
+      </div>
+
+      <h2 class="panel-title">Tema</h2>
+      <div class="field-row">
+        <div class="field field-color"><label for="f-ink">Tinta</label><input id="f-ink" type="color" /></div>
+        <div class="field field-color"><label for="f-brass">Acento</label><input id="f-brass" type="color" /></div>
+        <div class="field field-color"><label for="f-ivory">Fondo</label><input id="f-ivory" type="color" /></div>
+      </div>
+
+      <h2 class="panel-title">Comercial</h2>
+      <div class="field"><label for="f-reward">Recompensa al guardar look</label><input id="f-reward" type="text" /></div>
+      <div class="field"><label for="f-cart">Plantilla de carrito
+        <span class="hint">{items} {campaign} {look}</span></label>
+        <input id="f-cart" type="url" spellcheck="false" /></div>
+      <div class="field field-narrow"><label for="f-retention">Retención de datos (días)</label>
+        <input id="f-retention" type="number" min="1" max="365" /></div>
+
+      <h2 class="panel-title">Catálogo de campaña</h2>
+      <div class="catalog-toggle" id="catalog-toggle"></div>
+
+      <div class="console-actions">
+        <button class="btn btn-primary btn-block" id="btn-apply">Guardar y aplicar</button>
+      </div>
+    </section>
+
+    <!-- ============ PREVIEW ============ -->
+    <section class="console-preview">
+      <div class="preview-head">
+        <h2 class="panel-title">Vista previa en vivo</h2>
+        <span class="preview-note" id="preview-note"></span>
+      </div>
+      <div class="preview-frame-wrap">
+        <iframe id="preview-frame" name="mirrora-preview" src="index.html" title="Vista previa de la PWA"></iframe>
+      </div>
+    </section>
+
+    <!-- ============ HANDOFF / QR ============ -->
+    <section class="console-panel">
+      <h2 class="panel-title">Handoff de campaña</h2>
+      <p class="panel-sub">Fase 2 · lado emisor</p>
+      <p class="console-copy">Este es el QR que Escaparates Pro o Gesture Lab muestran junto al
+        CTA <em>“Pruébatelo en tu móvil”</em>. Solo transporta campaña y marca —
+        nunca datos personales (<code>mirrora-handoff/v0.1</code>).</p>
+      <div class="qr-holder qr-holder-console" id="campaign-qr"></div>
+      <div class="handoff-url-row">
+        <input id="handoff-url" type="text" readonly spellcheck="false" />
+        <button class="btn btn-ghost" id="btn-copy-url">Copiar</button>
+      </div>
+      <div class="console-actions">
+        <button class="btn btn-ghost btn-block" id="btn-download-qr">Descargar QR (SVG)</button>
+      </div>
+      <p class="console-copy console-copy-dim">Integración: Escaparates renderiza esta URL como QR
+        en la escena de campaña. Al escanear, la PWA arranca sesión con
+        <code>source=escaparate</code> y el funnel queda medido de punta a punta.</p>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="js/lib/qrcode.js"></script>
+  <script type="module" src="js/console.js"></script>
+</body>
+</html>

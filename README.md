@@ -7,9 +7,7 @@ descubrir look → identidad de estilo → avatar → probar/combinar → guarda
 ```
 
 Repo independiente del ecosistema (no vive dentro de Escaparates Pro). El blueprint
-completo de arquitectura está en
-`IMMERSPHERE-PRO-INMOBILIARIAS/docs/MIRRORA-STYLE-STUDIO-ARQUITECTURA.md` hasta su
-traslado aquí.
+completo de arquitectura está en [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md).
 
 ## Estado — Fase 1 (v0.1)
 
@@ -21,8 +19,12 @@ traslado aquí.
 - ✅ CTA a carrito white-label (plantilla en `js/data/brand.js`)
 - ✅ Funnel de eventos local con endpoint conmutables (`js/analytics.js`)
 - ✅ PWA: manifest + service worker cache-first
+- ✅ **Consola de marca** (`console.html`): identidad, tema, recompensa, carrito,
+  retención, catálogo de campaña activable, vista previa en vivo, export/import JSON
+  y **QR de handoff de campaña** (lado emisor de Fase 2, listo para que
+  Escaparates/Gesture Lab lo rendericen junto al CTA “Pruébatelo en tu móvil”)
 
-Pendiente (fases 2+): handoff real desde Escaparates/Gesture Lab, consola de marca,
+Pendiente: integración física del QR en Escaparates/Gesture Lab (Fase 2),
 `mirrora-tryon-gateway` (niveles 2 y 3 de avatar), backend de eventos.
 
 ## Stack
@@ -44,6 +46,9 @@ npx serve .
 
 ```
 index.html            shell de la SPA/PWA
+console.html          consola de marca (white-label + QR de campaña)
+js/console.js         lógica de la consola
+css/console.css       estilos de la consola
 css/mirrora.css       sistema de diseño (ivory/ink/brass, editorial)
 js/app.js             navegación y vistas
 js/store.js           estado + localStorage (sesión anónima por dispositivo)

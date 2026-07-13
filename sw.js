@@ -1,9 +1,12 @@
 // Service worker — app shell cache-first (Fase 1).
-const CACHE = "mirrora-v1";
+const CACHE = "mirrora-v2";
 const SHELL = [
   "./",
   "index.html",
+  "console.html",
   "css/mirrora.css",
+  "css/console.css",
+  "js/console.js",
   "js/app.js",
   "js/store.js",
   "js/analytics.js",

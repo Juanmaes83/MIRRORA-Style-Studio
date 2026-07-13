@@ -42,8 +42,18 @@ function toast(msg) {
 /* ================= Hero ================= */
 
 function renderHero() {
-  const featured = PRODUCTS[4]; // Ópera
+  const pool = enabledProducts();
+  const featured = pool[4] || pool[0] || null;
   $("#hero-stage").innerHTML = avatarSVG(state.avatar, featured, ["panuelo"]);
+}
+
+// Tema white-label desde la consola de marca
+function applyBrandTheme() {
+  const t = BRAND.theme || {};
+  const r = document.documentElement.style;
+  if (t.ink) { r.setProperty("--ink", t.ink); }
+  if (t.brass) { r.setProperty("--brass", t.brass); }
+  if (t.ivory) { r.setProperty("--ivory", t.ivory); }
 }
 
 /* ================= Catálogo / Wishlist ================= */
@@ -66,8 +76,17 @@ function productCard(p) {
   </article>`;
 }
 
+function enabledProducts() {
+  return BRAND.enabledProducts
+    ? PRODUCTS.filter(p => BRAND.enabledProducts.includes(p.id))
+    : PRODUCTS;
+}
+
 function renderCatalog() {
-  $("#catalog-grid").innerHTML = PRODUCTS.map(productCard).join("");
+  const items = enabledProducts();
+  $("#catalog-grid").innerHTML = items.length
+    ? items.map(productCard).join("")
+    : `<p class="empty-note">Esta campaña aún no tiene piezas activas.</p>`;
 }
 
 function renderWishlist() {
@@ -297,6 +316,7 @@ function renderCampaignBanner(session) {
 
 /* ================= Init ================= */
 
+applyBrandTheme();
 const session = readIncomingHandoff();
 renderCampaignBanner(session || state.session);
 $("#foot-brand").textContent = BRAND.name;
