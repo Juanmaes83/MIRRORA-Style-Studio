@@ -2,7 +2,7 @@
 // Vanilla ES modules, sin frameworks ni CDNs.
 
 import { state, save, subscribe, toggleWishlist, setProduct, toggleCombo, clearSelection, saveLook, deleteLook } from "./store.js";
-import { PRODUCTS, COMBOS, findItem, productSVG, comboSVG } from "./data/catalog.js";
+import { PRODUCTS, COMBOS, OUTFITS, CATALOG_META, findItem, productArt, productSVG, comboSVG, initCatalog } from "./data/catalog.js";
 import { AVATAR_OPTIONS, avatarSVG } from "./avatar.js";
 import { BRAND, formatPrice } from "./data/brand.js";
 import { track } from "./analytics.js";
@@ -43,7 +43,7 @@ function toast(msg) {
 
 function renderHero() {
   const pool = enabledProducts();
-  const featured = pool[4] || pool[0] || null;
+  const featured = pool.find(p => p.part === "accessories_up") || pool[4] || pool[0] || null;
   $("#hero-stage").innerHTML = avatarSVG(state.avatar, featured, ["panuelo"]);
 }
 
@@ -62,11 +62,11 @@ function productCard(p) {
   const wished = state.wishlist.includes(p.id);
   return `
   <article class="product-card">
-    <div class="product-art">${productSVG(p)}</div>
+    <div class="product-art">${productArt(p)}</div>
     <div class="product-meta">
       <span class="product-line">${p.line}</span>
       <span class="product-name">${p.name}</span>
-      <span class="product-price">${formatPrice(p.price)}</span>
+      ${p.price ? `<span class="product-price">${formatPrice(p.price)}</span>` : ""}
       <div class="product-actions">
         <button class="btn-try" data-try="${p.id}">Probar</button>
         <button class="btn-wish ${wished ? "is-on" : ""}" data-wish="${p.id}"
@@ -82,11 +82,32 @@ function enabledProducts() {
     : PRODUCTS;
 }
 
+function outfitCard(o) {
+  const names = o.garmentIds.map(id => findItem(id)?.name).filter(Boolean).join(" · ");
+  return `
+  <article class="product-card outfit-card">
+    <div class="product-art">${o.image ? `<img src="${o.image}" alt="${o.name}" loading="lazy" />` : ""}</div>
+    <div class="product-meta">
+      <span class="product-line">Look de la colección</span>
+      <span class="product-name">${o.name}</span>
+      <span class="look-items">${names}</span>
+      <div class="product-actions">
+        <button class="btn-try" data-try-outfit="${o.id}">Probar look</button>
+      </div>
+    </div>
+  </article>`;
+}
+
 function renderCatalog() {
   const items = enabledProducts();
-  $("#catalog-grid").innerHTML = items.length
+  const grid = items.length
     ? items.map(productCard).join("")
     : `<p class="empty-note">Esta campaña aún no tiene piezas activas.</p>`;
+  const outfitBlock = OUTFITS.length
+    ? `<div class="catalog-outfits"><h3 class="catalog-outfits-title">Looks de la colección</h3>
+       <div class="catalog-grid">${OUTFITS.map(outfitCard).join("")}</div></div>`
+    : "";
+  $("#catalog-grid").innerHTML = grid + outfitBlock;
 }
 
 function renderWishlist() {
@@ -97,6 +118,18 @@ function renderWishlist() {
 }
 
 document.addEventListener("click", e => {
+  const tryOutfit = e.target.closest("[data-try-outfit]");
+  if (tryOutfit) {
+    const outfit = OUTFITS.find(o => o.id === tryOutfit.dataset.tryOutfit);
+    const first = outfit?.garmentIds.map(findItem).find(Boolean);
+    if (first) {
+      setProduct(first.id);
+      track("seleccion", { outfitId: outfit.id, productId: first.id });
+      goto("studio");
+      toast(`${outfit.name} en el estudio`);
+    }
+    return;
+  }
   const tryBtn = e.target.closest("[data-try]");
   if (tryBtn) {
     const p = findItem(tryBtn.dataset.try);
@@ -184,12 +217,12 @@ function renderSelection() {
   const total = items.reduce((sum, it) => sum + it.price, 0);
   box.innerHTML = items.map(it => `
     <div class="sel-item">
-      ${it.shape ? productSVG(it) : comboSVG(it)}
+      ${it.shape || it.part ? productArt(it) : comboSVG(it)}
       <span class="sel-item-name">${it.name}</span>
       <span class="sel-item-price">${formatPrice(it.price)}</span>
       <button class="sel-remove" data-remove="${it.id}" aria-label="Quitar ${it.name}">×</button>
     </div>`).join("")
-    + `<div class="sel-total"><span>Total del look</span><span>${formatPrice(total)}</span></div>`;
+    + (total ? `<div class="sel-total"><span>Total del look</span><span>${formatPrice(total)}</span></div>` : "");
 }
 
 function renderStudio() {
@@ -249,7 +282,7 @@ function lookCard(look) {
     <div class="look-art">${avatarSVG(look.avatar, product, look.comboIds)}</div>
     <div class="look-meta">
       <h3 class="look-name">${look.name}</h3>
-      <p class="look-items">${names || "Avatar"} — ${formatPrice(total)}</p>
+      <p class="look-items">${names || "Avatar"}${total ? " — " + formatPrice(total) : ""}</p>
       <div class="look-actions">
         <button class="btn btn-ghost" data-qr="${look.id}">QR a móvil</button>
         <button class="btn btn-primary" data-cart="${look.id}">Al carrito</button>
@@ -316,6 +349,7 @@ function renderCampaignBanner(session) {
 
 /* ================= Init ================= */
 
+await initCatalog();
 applyBrandTheme();
 const session = readIncomingHandoff();
 renderCampaignBanner(session || state.session);

@@ -1,5 +1,9 @@
 // Catálogo piloto — categoría: bolsos + complementos combinables.
 // Todo el arte es SVG inline propio (sin assets externos).
+//
+// Fase 1 Fashion Studio SOL: si existe catalog/catalog.json (paquete
+// mirrora-catalog/v0.1 exportado desde wardrobe), sustituye a este catálogo
+// demo con prendas reales (imágenes PNG) y looks de colección.
 
 const S = (body, vb = "0 0 120 120") =>
   `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">${body}</svg>`;
@@ -112,6 +116,51 @@ export const COMBOS = [
 export function productSVG(product, scale) {
   const svg = bagArt[product.shape](product.color, product.accent);
   return scale ? svg.replace("<svg ", `<svg style="width:${scale}px;height:${scale}px" `) : svg;
+}
+
+/* ---------- Catálogo externo (mirrora-catalog/v0.1) ---------- */
+
+export let CATALOG_META = { source: "demo", brandId: null, campaignId: null };
+export const OUTFITS = [];
+
+export async function initCatalog() {
+  try {
+    const res = await fetch("catalog/catalog.json", { cache: "no-store" });
+    if (!res.ok) return false;
+    const cat = await res.json();
+    if (!cat.schema?.startsWith("mirrora-catalog/")) return false;
+    if (!Array.isArray(cat.products) || !cat.products.length) return false;
+
+    const mapped = cat.products.map(p => ({
+      ...p,
+      image: `catalog/${p.image}`,
+      modeledImage: p.modeledImage ? `catalog/${p.modeledImage}` : null
+    }));
+    PRODUCTS.splice(0, PRODUCTS.length, ...mapped);
+
+    OUTFITS.splice(0, OUTFITS.length, ...(cat.outfits || []).map(o => ({
+      ...o,
+      image: o.image ? `catalog/${o.image}` : null
+    })));
+
+    CATALOG_META = { source: "external", brandId: cat.brandId, campaignId: cat.campaignId };
+    return true;
+  } catch {
+    return false; // sin catálogo externo → catálogo SVG demo
+  }
+}
+
+// Arte de producto para tarjetas/listas: imagen real si existe, SVG si no.
+export function productArt(p) {
+  return p.image
+    ? `<img src="${p.image}" alt="${p.name}" loading="lazy" />`
+    : productSVG(p);
+}
+
+// Cuerpo SVG del producto para componer dentro del avatar (caja 120x120).
+export function productAvatarBody(p) {
+  if (p.image) return `<image href="${p.image}" x="0" y="0" width="120" height="120" />`;
+  return productSVG(p).replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "");
 }
 
 export function comboSVG(combo) {
