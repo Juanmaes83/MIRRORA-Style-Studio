@@ -309,6 +309,9 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 500; letter-spacing: 0.01em
 .foot-legal { font-size: 0.72rem; margin-top: 6px; opacity: 0.8; }
 
 /* ---------------- Outfit Studio (colección real) ---------------- */
+.catalog-filters { grid-column: 1 / -1; margin-bottom: 6px; }
+.outfit-card .product-art .look-board { max-width: 180px; }
+.outfit-card .product-art .look-board figcaption { display: none; }
 .editorial { margin: 0; text-align: center; }
 .editorial img {
   width: 100%; max-width: 460px; aspect-ratio: 1; object-fit: cover;
