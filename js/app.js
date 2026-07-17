@@ -134,10 +134,14 @@ function productCard(p) {
 }
 
 function outfitCard(o) {
-  const names = o.garmentIds.map(id => findItem(id)?.name).filter(Boolean).join(" · ");
+  const items = o.garmentIds.map(findItem).filter(Boolean);
+  const names = items.map(i => i.name).join(" · ");
+  const art = o.image
+    ? `<img src="${o.image}" alt="${o.name}" loading="lazy" />`
+    : lookVisual(items, null, "thumb"); // outfit sin editorial: tablero de sus prendas
   return `
   <article class="product-card outfit-card">
-    <div class="product-art">${o.image ? `<img src="${o.image}" alt="${o.name}" loading="lazy" />` : ""}</div>
+    <div class="product-art">${art}</div>
     <div class="product-meta">
       <span class="product-line">Look de la colección</span>
       <span class="product-name">${o.name}</span>
@@ -149,8 +153,22 @@ function outfitCard(o) {
   </article>`;
 }
 
+let catalogFilter = "";
+
+function categoryChips(items) {
+  const cats = [...new Set(items.map(p => p.category).filter(Boolean))];
+  if (cats.length < 2) return "";
+  return `<div class="ctrl-row catalog-filters">
+    <button class="chip ${!catalogFilter ? "is-on" : ""}" data-filter="">Todo</button>
+    ${cats.map(c => `<button class="chip ${catalogFilter === c ? "is-on" : ""}" data-filter="${c}">
+      ${items.find(p => p.category === c)?.line || c}</button>`).join("")}
+  </div>`;
+}
+
 function renderCatalog() {
-  const items = enabledProducts();
+  const all = enabledProducts();
+  const chips = categoryChips(all);
+  const items = catalogFilter ? all.filter(p => p.category === catalogFilter) : all;
   const grid = items.length
     ? items.map(productCard).join("")
     : `<p class="empty-note">Esta campaña aún no tiene piezas activas.</p>`;
@@ -158,8 +176,13 @@ function renderCatalog() {
     ? `<div class="catalog-outfits"><h3 class="catalog-outfits-title">Looks de la colección</h3>
        <div class="catalog-grid">${OUTFITS.map(outfitCard).join("")}</div></div>`
     : "";
-  $("#catalog-grid").innerHTML = grid + outfitBlock;
+  $("#catalog-grid").innerHTML = chips + grid + outfitBlock;
 }
+
+document.addEventListener("click", e => {
+  const f = e.target.closest("[data-filter]");
+  if (f) { catalogFilter = f.dataset.filter; renderCatalog(); }
+});
 
 function renderWishlist() {
   const items = PRODUCTS.filter(p => state.wishlist.includes(p.id));

@@ -3,14 +3,30 @@
   "brandId": "maison-demo",
   "campaignId": "wardrobe-real-01",
   "currency": "EUR",
-  "generatedAt": "2026-07-17T14:48:41.555Z",
+  "generatedAt": "2026-07-17T17:42:08.749Z",
   "source": "wardrobe",
   "products": [
     {
       "id": "import-e3ea0305-1680-4ec7-85e0-1bbb7d58d827",
       "name": "white button-up dress shirt",
-      "line": "Parte superior",
+      "description": "",
+      "line": "Camisas y tops",
       "part": "upperbody",
+      "category": "tops",
+      "subcategory": "dress-shirt",
+      "garmentType": "shirt",
+      "material": "poplin",
+      "silhouette": "fitted",
+      "fit": "regular",
+      "style": "smart-casual",
+      "season": [
+        "all-season"
+      ],
+      "occasion": [
+        "office",
+        "event"
+      ],
+      "thermalWeight": 1,
       "price": 0,
       "color": "#f5f5f3",
       "secondaryColor": null,
@@ -26,8 +42,25 @@
     {
       "id": "import-911aa429-43b5-49d9-8cef-8964b3310168",
       "name": "black crewneck sweater",
-      "line": "Parte superior",
+      "description": "",
+      "line": "Punto",
       "part": "upperbody",
+      "category": "knitwear",
+      "subcategory": "crewneck",
+      "garmentType": "sweater",
+      "material": "merino",
+      "silhouette": "fitted",
+      "fit": "regular",
+      "style": "minimal",
+      "season": [
+        "autumn",
+        "winter"
+      ],
+      "occasion": [
+        "casual",
+        "office"
+      ],
+      "thermalWeight": 3,
       "price": 0,
       "color": "#1a1a1a",
       "secondaryColor": null,
@@ -42,8 +75,26 @@
     {
       "id": "import-04396ccb-21b1-4455-9373-af2ebe12c745",
       "name": "tan blazer",
-      "line": "Capa exterior",
+      "description": "",
+      "line": "Abrigo y capas",
       "part": "wholebody_up",
+      "category": "outerwear",
+      "subcategory": "blazer",
+      "garmentType": "blazer",
+      "material": "wool",
+      "silhouette": "straight",
+      "fit": "regular",
+      "style": "tailored",
+      "season": [
+        "autumn",
+        "winter",
+        "spring"
+      ],
+      "occasion": [
+        "office",
+        "event"
+      ],
+      "thermalWeight": 3,
       "price": 0,
       "color": "#c99a64",
       "secondaryColor": "#a87443",
@@ -59,8 +110,24 @@
     {
       "id": "import-ffbd662c-f140-406a-b0bc-8d1e1e8290cc",
       "name": "dress pants",
-      "line": "Parte inferior",
+      "description": "",
+      "line": "Pantalones",
       "part": "lowerbody",
+      "category": "bottoms",
+      "subcategory": "tailored-trousers",
+      "garmentType": "trousers",
+      "material": "wool",
+      "silhouette": "straight",
+      "fit": "regular",
+      "style": "tailored",
+      "season": [
+        "all-season"
+      ],
+      "occasion": [
+        "office",
+        "evening"
+      ],
+      "thermalWeight": 2,
       "price": 0,
       "color": "#1b1b1d",
       "secondaryColor": null,
@@ -76,8 +143,24 @@
     {
       "id": "import-8e58cdb7-ee7d-4bb6-a7fb-e04231194a4b",
       "name": "dark blue jeans",
-      "line": "Parte inferior",
+      "description": "",
+      "line": "Denim",
       "part": "lowerbody",
+      "category": "denim",
+      "subcategory": "straight",
+      "garmentType": "jeans",
+      "material": "denim",
+      "silhouette": "straight",
+      "fit": "regular",
+      "style": "casual",
+      "season": [
+        "all-season"
+      ],
+      "occasion": [
+        "casual",
+        "weekend"
+      ],
+      "thermalWeight": 2,
       "price": 0,
       "color": "#252b43",
       "secondaryColor": "#b38a4a",
@@ -93,8 +176,25 @@
     {
       "id": "import-59ebf486-4007-479d-9c19-4495e4649153",
       "name": "white low-top sneakers",
+      "description": "",
       "line": "Calzado",
       "part": "shoes",
+      "category": "footwear",
+      "subcategory": "low-top-sneaker",
+      "garmentType": "sneakers",
+      "material": "leather",
+      "silhouette": null,
+      "fit": null,
+      "style": "casual",
+      "season": [
+        "all-season"
+      ],
+      "occasion": [
+        "casual",
+        "weekend",
+        "travel"
+      ],
+      "thermalWeight": 1,
       "price": 0,
       "color": "#f2f2f2",
       "secondaryColor": "#d7d7d7",
@@ -127,7 +227,7 @@
       ],
       "description": "Neutros cálidos con base blanco/negro: el blazer camel enmarca y domina; contraste controlado.",
       "image": "images/camel-classic.png",
-      "status": "accepted"
+      "status": "approved"
     },
     {
       "id": "indigo-knit",
@@ -147,7 +247,7 @@
       ],
       "description": "Armonía análoga oscura negro/índigo con zapatilla blanca como único punto de luz.",
       "image": "images/indigo-knit.png",
-      "status": "accepted"
+      "status": "approved"
     },
     {
       "id": "noir-minimal",
@@ -167,7 +267,21 @@
       ],
       "description": "Tonal negro de punta a punta; la silueta y las texturas llevan el look, blanco solo en el calzado.",
       "image": "images/noir-minimal.png",
-      "status": "accepted"
+      "status": "approved"
+    },
+    {
+      "id": "office-crisp",
+      "name": "Office Crisp",
+      "garmentIds": [
+        "import-e3ea0305-1680-4ec7-85e0-1bbb7d58d827",
+        "import-ffbd662c-f140-406a-b0bc-8d1e1e8290cc",
+        "import-59ebf486-4007-479d-9c19-4495e4649153"
+      ],
+      "occasion": [],
+      "season": [],
+      "description": "Camisa blanca con sastreria negra",
+      "image": null,
+      "status": "published"
     }
   ]
 }
