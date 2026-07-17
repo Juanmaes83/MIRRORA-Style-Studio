@@ -1,0 +1,173 @@
+{
+  "schema": "mirrora-catalog/v0.1",
+  "brandId": "maison-demo",
+  "campaignId": "wardrobe-real-01",
+  "currency": "EUR",
+  "generatedAt": "2026-07-17T14:48:41.555Z",
+  "source": "wardrobe",
+  "products": [
+    {
+      "id": "import-e3ea0305-1680-4ec7-85e0-1bbb7d58d827",
+      "name": "white button-up dress shirt",
+      "line": "Parte superior",
+      "part": "upperbody",
+      "price": 0,
+      "color": "#f5f5f3",
+      "secondaryColor": null,
+      "tags": [
+        "longsleeve",
+        "collared",
+        "buttonfront",
+        "dressshirt"
+      ],
+      "image": "images/import-e3ea0305-1680-4ec7-85e0-1bbb7d58d827-garment.png",
+      "modeledImage": "images/import-e3ea0305-1680-4ec7-85e0-1bbb7d58d827-modeled.png"
+    },
+    {
+      "id": "import-911aa429-43b5-49d9-8cef-8964b3310168",
+      "name": "black crewneck sweater",
+      "line": "Parte superior",
+      "part": "upperbody",
+      "price": 0,
+      "color": "#1a1a1a",
+      "secondaryColor": null,
+      "tags": [
+        "longsleeve",
+        "knit",
+        "crewneck"
+      ],
+      "image": "images/import-911aa429-43b5-49d9-8cef-8964b3310168-garment.png",
+      "modeledImage": "images/import-911aa429-43b5-49d9-8cef-8964b3310168-modeled.png"
+    },
+    {
+      "id": "import-04396ccb-21b1-4455-9373-af2ebe12c745",
+      "name": "tan blazer",
+      "line": "Capa exterior",
+      "part": "wholebody_up",
+      "price": 0,
+      "color": "#c99a64",
+      "secondaryColor": "#a87443",
+      "tags": [
+        "tailored",
+        "notched-lapel",
+        "single-breasted",
+        "two-button"
+      ],
+      "image": "images/import-04396ccb-21b1-4455-9373-af2ebe12c745-garment.png",
+      "modeledImage": "images/import-04396ccb-21b1-4455-9373-af2ebe12c745-modeled.png"
+    },
+    {
+      "id": "import-ffbd662c-f140-406a-b0bc-8d1e1e8290cc",
+      "name": "dress pants",
+      "line": "Parte inferior",
+      "part": "lowerbody",
+      "price": 0,
+      "color": "#1b1b1d",
+      "secondaryColor": null,
+      "tags": [
+        "tailored",
+        "pleated",
+        "cuffed",
+        "solid"
+      ],
+      "image": "images/import-ffbd662c-f140-406a-b0bc-8d1e1e8290cc-garment.png",
+      "modeledImage": "images/import-ffbd662c-f140-406a-b0bc-8d1e1e8290cc-modeled.png"
+    },
+    {
+      "id": "import-8e58cdb7-ee7d-4bb6-a7fb-e04231194a4b",
+      "name": "dark blue jeans",
+      "line": "Parte inferior",
+      "part": "lowerbody",
+      "price": 0,
+      "color": "#252b43",
+      "secondaryColor": "#b38a4a",
+      "tags": [
+        "denim",
+        "straight-leg",
+        "pockets",
+        "topstitching"
+      ],
+      "image": "images/import-8e58cdb7-ee7d-4bb6-a7fb-e04231194a4b-garment.png",
+      "modeledImage": "images/import-8e58cdb7-ee7d-4bb6-a7fb-e04231194a4b-modeled.png"
+    },
+    {
+      "id": "import-59ebf486-4007-479d-9c19-4495e4649153",
+      "name": "white low-top sneakers",
+      "line": "Calzado",
+      "part": "shoes",
+      "price": 0,
+      "color": "#f2f2f2",
+      "secondaryColor": "#d7d7d7",
+      "tags": [
+        "lace-up",
+        "leather",
+        "minimal"
+      ],
+      "image": "images/import-59ebf486-4007-479d-9c19-4495e4649153-garment.png",
+      "modeledImage": "images/import-59ebf486-4007-479d-9c19-4495e4649153-modeled.png"
+    }
+  ],
+  "outfits": [
+    {
+      "id": "camel-classic",
+      "name": "Camel Classic",
+      "garmentIds": [
+        "import-e3ea0305-1680-4ec7-85e0-1bbb7d58d827",
+        "import-ffbd662c-f140-406a-b0bc-8d1e1e8290cc",
+        "import-04396ccb-21b1-4455-9373-af2ebe12c745",
+        "import-59ebf486-4007-479d-9c19-4495e4649153"
+      ],
+      "occasion": [
+        "smart-casual",
+        "office"
+      ],
+      "season": [
+        "autumn",
+        "spring"
+      ],
+      "description": "Neutros cálidos con base blanco/negro: el blazer camel enmarca y domina; contraste controlado.",
+      "image": "images/camel-classic.png",
+      "status": "accepted"
+    },
+    {
+      "id": "indigo-knit",
+      "name": "Indigo Knit",
+      "garmentIds": [
+        "import-911aa429-43b5-49d9-8cef-8964b3310168",
+        "import-8e58cdb7-ee7d-4bb6-a7fb-e04231194a4b",
+        "import-59ebf486-4007-479d-9c19-4495e4649153"
+      ],
+      "occasion": [
+        "casual",
+        "weekend"
+      ],
+      "season": [
+        "autumn",
+        "winter"
+      ],
+      "description": "Armonía análoga oscura negro/índigo con zapatilla blanca como único punto de luz.",
+      "image": "images/indigo-knit.png",
+      "status": "accepted"
+    },
+    {
+      "id": "noir-minimal",
+      "name": "Noir Minimal",
+      "garmentIds": [
+        "import-911aa429-43b5-49d9-8cef-8964b3310168",
+        "import-ffbd662c-f140-406a-b0bc-8d1e1e8290cc",
+        "import-59ebf486-4007-479d-9c19-4495e4649153"
+      ],
+      "occasion": [
+        "evening",
+        "smart-casual"
+      ],
+      "season": [
+        "autumn",
+        "winter"
+      ],
+      "description": "Tonal negro de punta a punta; la silueta y las texturas llevan el look, blanco solo en el calzado.",
+      "image": "images/noir-minimal.png",
+      "status": "accepted"
+    }
+  ]
+}

@@ -13,7 +13,9 @@ const DEFAULTS = {
     hairColor: "#2f2118",
     style: "minimal"        // minimal | boho | sastre | urbano
   },
-  selection: { productId: null, comboIds: [] },
+  // Look activo: composición por categorías. slots = { <slot>: <itemId> }.
+  // outfitId se rellena si la composición nació de un look de la colección.
+  selection: { slots: {}, outfitId: null },
   wishlist: [],             // product ids
   looks: [],                // { id, name, avatar, productId, comboIds, createdAt }
   events: []                // funnel local (espejo de analytics)
@@ -24,7 +26,9 @@ function load() {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const data = JSON.parse(raw);
-      return { ...structuredClone(DEFAULTS), ...data, avatar: { ...DEFAULTS.avatar, ...data.avatar } };
+      const state = { ...structuredClone(DEFAULTS), ...data, avatar: { ...DEFAULTS.avatar, ...data.avatar } };
+      if (!state.selection || !state.selection.slots) state.selection = { slots: {}, outfitId: null };
+      return state;
     }
   } catch { /* estado corrupto → empezar limpio */ }
   return structuredClone(DEFAULTS);
@@ -56,23 +60,31 @@ export function toggleWishlist(productId) {
   return i < 0;
 }
 
-export function setProduct(productId) {
-  state.selection.productId = productId;
+export function setSlot(slot, itemId) {
+  if (state.selection.slots[slot] === itemId) delete state.selection.slots[slot];
+  else state.selection.slots[slot] = itemId;
+  state.selection.outfitId = null;
   save();
 }
 
-export function toggleCombo(comboId) {
-  const list = state.selection.comboIds;
-  const i = list.indexOf(comboId);
-  if (i >= 0) list.splice(i, 1);
-  else list.push(comboId);
+export function removeSlot(slot) {
+  delete state.selection.slots[slot];
+  state.selection.outfitId = null;
   save();
-  return i < 0;
+}
+
+export function loadComposition(slotsMap, outfitId = null) {
+  state.selection = { slots: { ...slotsMap }, outfitId };
+  save();
 }
 
 export function clearSelection() {
-  state.selection = { productId: null, comboIds: [] };
+  state.selection = { slots: {}, outfitId: null };
   save();
+}
+
+export function selectedIds() {
+  return Object.values(state.selection.slots);
 }
 
 export function saveLook(name) {
@@ -80,8 +92,9 @@ export function saveLook(name) {
     id: "look-" + Date.now().toString(36),
     name,
     avatar: { ...state.avatar },
-    productId: state.selection.productId,
-    comboIds: [...state.selection.comboIds],
+    itemIds: selectedIds(),
+    slots: { ...state.selection.slots },
+    outfitId: state.selection.outfitId,
     createdAt: new Date().toISOString()
   };
   state.looks.unshift(look);

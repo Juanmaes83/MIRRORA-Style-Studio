@@ -1,7 +1,7 @@
 // Avatar nivel 1 — editorial, paramétrico, sin foto ni datos biométricos.
 // Se compone en SVG: silueta + tono + pelo + estilo, con la pieza y complementos del look.
 
-import { productSVG } from "./data/catalog.js";
+import { productAvatarBody } from "./data/catalog.js";
 
 export const AVATAR_OPTIONS = {
   silhouette: [
@@ -68,10 +68,6 @@ function outfit(silhouette, pal) {
   }
 }
 
-function stripSvgWrapper(svg) {
-  return svg.replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "");
-}
-
 /**
  * @param {object} cfg    state.avatar
  * @param {object|null} product   pieza principal seleccionada
@@ -82,7 +78,7 @@ export function avatarSVG(cfg, product = null, comboIds = []) {
   const has = id => comboIds.includes(id);
 
   const bag = product
-    ? `<g transform="translate(122,168) scale(0.62)">${stripSvgWrapper(productSVG(product))}</g>`
+    ? `<g transform="translate(122,168) scale(0.62)">${productAvatarBody(product)}</g>`
     : "";
 
   const charm = product && has("charm")

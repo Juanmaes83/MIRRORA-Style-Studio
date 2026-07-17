@@ -2,7 +2,9 @@
 // Escribe el override en localStorage (mismo origen que la PWA); la vista previa se recarga al aplicar.
 
 import { BRAND_DEFAULTS, loadBrandOverride, saveBrandOverride, clearBrandOverride } from "./data/brand.js";
-import { PRODUCTS } from "./data/catalog.js";
+import { PRODUCTS, initCatalog } from "./data/catalog.js";
+
+await initCatalog(); // catálogo externo (wardrobe) si existe; demo SVG si no
 
 const $ = sel => document.querySelector(sel);
 

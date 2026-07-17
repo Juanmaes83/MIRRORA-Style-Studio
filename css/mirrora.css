@@ -146,6 +146,14 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 500; letter-spacing: 0.01em
   background: linear-gradient(160deg, var(--ivory-2), var(--card));
 }
 .product-art svg { width: 130px; height: 130px; }
+.product-art img { width: 130px; height: 130px; object-fit: contain; }
+.outfit-card .product-art img { width: 170px; height: 170px; }
+.catalog-outfits { grid-column: 1 / -1; margin-top: 34px; }
+.catalog-outfits-title {
+  font-size: 1.6rem; margin-bottom: 16px;
+  border-top: 1px solid var(--line); padding-top: 26px;
+}
+.sel-item img { width: 40px; height: 40px; object-fit: contain; flex-shrink: 0; }
 .product-meta { padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .product-name { font-family: var(--serif); font-size: 1.25rem; }
 .product-line { font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-soft); }
@@ -299,6 +307,64 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 500; letter-spacing: 0.01em
   color: var(--ink-soft); font-size: 0.85rem;
 }
 .foot-legal { font-size: 0.72rem; margin-top: 6px; opacity: 0.8; }
+
+/* ---------------- Outfit Studio (colección real) ---------------- */
+.editorial { margin: 0; text-align: center; }
+.editorial img {
+  width: 100%; max-width: 460px; aspect-ratio: 1; object-fit: cover;
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.editorial figcaption {
+  font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-soft); margin-top: 10px;
+}
+.hero-editorial img { max-width: 420px; }
+
+.look-board {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 14px; width: 100%; max-width: 520px; margin: 0 auto;
+}
+.look-board .board-cell {
+  margin: 0; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 12px 10px 8px; text-align: center;
+}
+.look-board .board-cell img, .look-board .board-cell svg {
+  width: 100%; aspect-ratio: 1; object-fit: contain;
+}
+.look-board .board-cell figcaption {
+  font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-soft); margin-top: 6px;
+}
+.look-art .thumb.look-board { max-width: 100%; gap: 6px; grid-template-columns: repeat(2, 1fr); }
+.look-art .thumb.look-board .board-cell { padding: 6px 4px 4px; }
+.look-art .thumb.look-board figcaption { display: none; }
+.look-art .editorial.thumb img { max-width: 210px; }
+
+.slot-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 0.88rem;
+}
+.slot-cat {
+  flex-shrink: 0; width: 45%; font-size: 0.68rem; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.slot-row.is-filled .slot-cat { color: var(--brass); }
+.slot-item { flex: 1; font-family: var(--serif); font-size: 0.98rem; }
+.slot-pick {
+  margin-left: auto; padding: 4px 12px; border-radius: 999px;
+  border: 1px solid var(--line); font-size: 0.7rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.slot-pick:hover { border-color: var(--brass); color: var(--brass); }
+.studio-note { font-size: 0.74rem; color: var(--ink-soft); margin-top: 14px; line-height: 1.5; }
+
+.sel-item-body { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.sel-item-cat { font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-soft); }
+.sel-item .sel-item-name { flex: unset; }
+
+.stage-empty { width: 100%; }
+.empty-note { display: grid; gap: 14px; justify-items: center; }
+.empty-note .btn { width: auto; }
 
 /* ---------------- Responsive ---------------- */
 @media (max-width: 1080px) {
