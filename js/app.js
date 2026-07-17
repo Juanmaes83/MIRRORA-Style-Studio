@@ -1,8 +1,14 @@
-// MIRRORA Style Studio — app shell (Fase 1)
+// MIRRORA Style Studio — Outfit Studio (Fase 1 Fashion Studio SOL)
 // Vanilla ES modules, sin frameworks ni CDNs.
+//
+// Honestidad visual: no existe try-on. El estudio es un COMPOSITOR de looks:
+// muestra la fotografía editorial real cuando la composición coincide con un
+// look de la colección y, si no, un tablero editorial de las piezas. El avatar
+// paramétrico solo se usa en el catálogo demo (bolsos SVG), nunca para simular
+// que una prenda real está puesta.
 
-import { state, save, subscribe, toggleWishlist, setProduct, toggleCombo, clearSelection, saveLook, deleteLook } from "./store.js";
-import { PRODUCTS, COMBOS, OUTFITS, CATALOG_META, findItem, productArt, productSVG, comboSVG, initCatalog } from "./data/catalog.js";
+import { state, save, subscribe, toggleWishlist, setSlot, removeSlot, loadComposition, clearSelection, selectedIds, saveLook, deleteLook } from "./store.js";
+import { PRODUCTS, COMBOS, OUTFITS, CATALOG_META, findItem, productArt, productSVG, comboSVG, initCatalog, slotOf, slotLabel, SLOT_ORDER } from "./data/catalog.js";
 import { AVATAR_OPTIONS, avatarSVG } from "./avatar.js";
 import { BRAND, formatPrice } from "./data/brand.js";
 import { track } from "./analytics.js";
@@ -10,6 +16,7 @@ import { buildHandoffURL, renderQR, readIncomingHandoff } from "./qr-handoff.js"
 
 const $ = sel => document.querySelector(sel);
 const $$ = sel => [...document.querySelectorAll(sel)];
+const external = () => CATALOG_META.source === "external";
 
 /* ================= Navegación ================= */
 
@@ -39,47 +46,91 @@ function toast(msg) {
   toastTimer = setTimeout(() => { el.hidden = true; }, 2600);
 }
 
-/* ================= Hero ================= */
+/* ================= Utilidades de look ================= */
 
-function renderHero() {
-  const pool = enabledProducts();
-  const featured = pool.find(p => p.part === "accessories_up") || pool[4] || pool[0] || null;
-  $("#hero-stage").innerHTML = avatarSVG(state.avatar, featured, ["panuelo"]);
+function priceLine(value) {
+  return value ? formatPrice(value) : "";
 }
 
-// Tema white-label desde la consola de marca
-function applyBrandTheme() {
-  const t = BRAND.theme || {};
-  const r = document.documentElement.style;
-  if (t.ink) { r.setProperty("--ink", t.ink); }
-  if (t.brass) { r.setProperty("--brass", t.brass); }
-  if (t.ivory) { r.setProperty("--ivory", t.ivory); }
+function itemsOfLook(look) {
+  const ids = look.itemIds || [look.productId, ...(look.comboIds || [])].filter(Boolean);
+  return ids.map(findItem).filter(Boolean);
+}
+
+function matchOutfit(ids) {
+  const set = new Set(ids);
+  return OUTFITS.find(o => o.garmentIds.length === set.size && o.garmentIds.every(id => set.has(id))) || null;
+}
+
+function lookVisual(items, outfit, size = "") {
+  // Editorial real si la composición ES un look de la colección; si no, tablero.
+  if (outfit?.image) {
+    return `<figure class="editorial ${size}">
+      <img src="${outfit.image}" alt="${outfit.name}" />
+      <figcaption>Fotografía editorial de la colección</figcaption>
+    </figure>`;
+  }
+  if (!items.length) return "";
+  return `<div class="look-board ${size}">
+    ${items.map(it => `<figure class="board-cell">
+        ${it.image ? `<img src="${it.image}" alt="${it.name}" />` : (it.shape ? productSVG(it) : comboSVG(it))}
+        <figcaption>${slotLabel(slotOf(it)).replace(/^combo.*/, "Complemento")}</figcaption>
+      </figure>`).join("")}
+  </div>`;
+}
+
+/* ================= Hero / copys de moda ================= */
+
+function applyCatalogCopy() {
+  if (!external()) return;
+  $(".hero-eyebrow").textContent = `Colección cápsula · ${CATALOG_META.campaignId || BRAND.campaignId}`;
+  $(".hero-lead").textContent =
+    "Descubre la colección, compón tu look pieza a pieza o parte de un look editorial completo, guárdalo y llévatelo en el móvil. Composición editorial, sin foto y sin fricción.";
+  $("#hero-cta-studio").textContent = "Abrir el estudio";
+  const head = $('[data-view="catalog"] .view-head p');
+  head.textContent = "Prêt-à-porter procesado en Wardrobe. Añade piezas a tu look o compón un look completo de la colección.";
+  $$(".step")[2].querySelector("p").textContent = "Compón el look por categorías en el estudio.";
+}
+
+function renderHero() {
+  const stage = $("#hero-stage");
+  if (external()) {
+    const o = OUTFITS[0];
+    stage.innerHTML = o?.image
+      ? `<figure class="editorial hero-editorial"><img src="${o.image}" alt="${o.name}" /></figure>`
+      : "";
+    return;
+  }
+  const pool = enabledProducts();
+  const featured = pool.find(p => p.shape) || null;
+  stage.innerHTML = avatarSVG(state.avatar, featured, ["panuelo"]);
 }
 
 /* ================= Catálogo / Wishlist ================= */
-
-function productCard(p) {
-  const wished = state.wishlist.includes(p.id);
-  return `
-  <article class="product-card">
-    <div class="product-art">${productArt(p)}</div>
-    <div class="product-meta">
-      <span class="product-line">${p.line}</span>
-      <span class="product-name">${p.name}</span>
-      ${p.price ? `<span class="product-price">${formatPrice(p.price)}</span>` : ""}
-      <div class="product-actions">
-        <button class="btn-try" data-try="${p.id}">Probar</button>
-        <button class="btn-wish ${wished ? "is-on" : ""}" data-wish="${p.id}"
-                aria-label="${wished ? "Quitar de wishlist" : "Añadir a wishlist"}">♥</button>
-      </div>
-    </div>
-  </article>`;
-}
 
 function enabledProducts() {
   return BRAND.enabledProducts
     ? PRODUCTS.filter(p => BRAND.enabledProducts.includes(p.id))
     : PRODUCTS;
+}
+
+function productCard(p) {
+  const wished = state.wishlist.includes(p.id);
+  const inLook = selectedIds().includes(p.id);
+  return `
+  <article class="product-card">
+    <div class="product-art">${productArt(p)}</div>
+    <div class="product-meta">
+      <span class="product-line">${p.line || slotLabel(slotOf(p))}</span>
+      <span class="product-name">${p.name}</span>
+      ${p.price ? `<span class="product-price">${formatPrice(p.price)}</span>` : ""}
+      <div class="product-actions">
+        <button class="btn-try" data-add="${p.id}">${inLook ? "En el look ✓" : "Añadir al look"}</button>
+        <button class="btn-wish ${wished ? "is-on" : ""}" data-wish="${p.id}"
+                aria-label="${wished ? "Quitar de wishlist" : "Añadir a wishlist"}">♥</button>
+      </div>
+    </div>
+  </article>`;
 }
 
 function outfitCard(o) {
@@ -92,7 +143,7 @@ function outfitCard(o) {
       <span class="product-name">${o.name}</span>
       <span class="look-items">${names}</span>
       <div class="product-actions">
-        <button class="btn-try" data-try-outfit="${o.id}">Probar look</button>
+        <button class="btn-try" data-compose="${o.id}">Componer este look</button>
       </div>
     </div>
   </article>`;
@@ -114,29 +165,30 @@ function renderWishlist() {
   const items = PRODUCTS.filter(p => state.wishlist.includes(p.id));
   $("#wishlist-grid").innerHTML = items.length
     ? items.map(productCard).join("")
-    : `<p class="empty-note">Tu wishlist está vacía. Explora la colección y marca ♥ en lo que te hable.</p>`;
+    : `<div class="empty-note"><p>Tu wishlist está vacía. Marca ♥ en las piezas que te hablen.</p>
+       <button class="btn btn-primary" data-nav="catalog">Explorar la colección</button></div>`;
 }
 
 document.addEventListener("click", e => {
-  const tryOutfit = e.target.closest("[data-try-outfit]");
-  if (tryOutfit) {
-    const outfit = OUTFITS.find(o => o.id === tryOutfit.dataset.tryOutfit);
-    const first = outfit?.garmentIds.map(findItem).find(Boolean);
-    if (first) {
-      setProduct(first.id);
-      track("seleccion", { outfitId: outfit.id, productId: first.id });
-      goto("studio");
-      toast(`${outfit.name} en el estudio`);
-    }
+  const addBtn = e.target.closest("[data-add]");
+  if (addBtn) {
+    const p = findItem(addBtn.dataset.add);
+    setSlot(slotOf(p), p.id);
+    track("seleccion", { productId: p.id, slot: slotOf(p) });
+    goto("studio");
+    toast(`${p.name} en tu look`);
     return;
   }
-  const tryBtn = e.target.closest("[data-try]");
-  if (tryBtn) {
-    const p = findItem(tryBtn.dataset.try);
-    setProduct(p.id);
-    track("seleccion", { productId: p.id });
+  const compose = e.target.closest("[data-compose]");
+  if (compose) {
+    const outfit = OUTFITS.find(o => o.id === compose.dataset.compose);
+    if (!outfit) return;
+    const slots = {};
+    outfit.garmentIds.map(findItem).filter(Boolean).forEach(it => { slots[slotOf(it)] = it.id; });
+    loadComposition(slots, outfit.id);
+    track("seleccion", { outfitId: outfit.id, items: outfit.garmentIds.join(",") });
     goto("studio");
-    toast(`${p.name} en el estudio`);
+    toast(`${outfit.name} cargado: ${Object.keys(slots).length} piezas`);
     return;
   }
   const wishBtn = e.target.closest("[data-wish]");
@@ -149,7 +201,7 @@ document.addEventListener("click", e => {
   }
 });
 
-/* ================= Estudio ================= */
+/* ================= Estudio — modo demo (bolsos SVG + avatar) ================= */
 
 function chipRow(key, options, current, isSwatch = false) {
   const btns = options.map(o => {
@@ -163,8 +215,10 @@ function chipRow(key, options, current, isSwatch = false) {
   return `<div class="ctrl-row">${btns}</div>`;
 }
 
-function renderAvatarControls() {
-  $("#avatar-controls").innerHTML = `
+function renderDemoStudio() {
+  $("#left-panel").innerHTML = `
+    <h2 class="panel-title">Tu avatar</h2>
+    <p class="panel-sub">Editorial, sin foto</p>
     <div class="ctrl-group"><span class="ctrl-label">Silueta</span>
       ${chipRow("silhouette", AVATAR_OPTIONS.silhouette, state.avatar.silhouette)}</div>
     <div class="ctrl-group"><span class="ctrl-label">Tono</span>
@@ -175,60 +229,97 @@ function renderAvatarControls() {
       ${chipRow("hairColor", AVATAR_OPTIONS.hairColor, state.avatar.hairColor, true)}</div>
     <div class="ctrl-group"><span class="ctrl-label">Estilo</span>
       ${chipRow("style", AVATAR_OPTIONS.style, state.avatar.style)}</div>`;
-}
 
-function renderAvatarStage() {
-  const product = state.selection.productId ? findItem(state.selection.productId) : null;
-  $("#avatar-stage").innerHTML = avatarSVG(state.avatar, product, state.selection.comboIds);
-}
-
-function renderOrbit() {
-  const ring = $("#orbit-ring");
-  const wrap = ring.closest(".orbit-wrap");
+  const bagId = state.selection.slots.bag;
+  const bag = bagId ? findItem(bagId) : null;
+  const comboIds = selectedIds().filter(id => COMBOS.some(c => c.id === id));
   const n = COMBOS.length;
-  ring.innerHTML = COMBOS.map((c, i) => {
+  const orbit = COMBOS.map((c, i) => {
     const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
     const x = 50 + 44 * Math.cos(angle);
     const y = 50 + 44 * Math.sin(angle);
-    const on = state.selection.comboIds.includes(c.id);
+    const on = comboIds.includes(c.id);
     return `<button class="orbit-item ${on ? "is-on" : ""}" data-combo="${c.id}"
               style="left:calc(${x}% - 38px); top:calc(${y}% - 38px)"
               aria-pressed="${on}" title="${c.name} · ${formatPrice(c.price)}">
               ${comboSVG(c)}<span class="orbit-label">${c.name}</span>
             </button>`;
   }).join("");
-  wrap.style.position = "relative";
+
+  $("#studio-stage-wrap").innerHTML = `
+    <div class="orbit-wrap"><div class="orbit-ring">${orbit}</div>
+      <div class="avatar-stage">${avatarSVG(state.avatar, bag, comboIds)}</div></div>
+    <p class="orbit-hint">Órbita de complementos — el avatar es una ilustración editorial, no una prueba de talla</p>`;
 }
+
+/* ================= Estudio — modo colección (compositor honesto) ================= */
+
+function renderCompositionPanel() {
+  const slots = state.selection.slots;
+  const rows = SLOT_ORDER.filter(s => s !== "bag").map(slot => {
+    const item = slots[slot] ? findItem(slots[slot]) : null;
+    return `<div class="slot-row ${item ? "is-filled" : ""}">
+      <span class="slot-cat">${slotLabel(slot)}</span>
+      ${item
+        ? `<span class="slot-item">${item.name}</span>
+           <button class="sel-remove" data-unslot="${slot}" aria-label="Quitar ${item.name}">×</button>`
+        : `<button class="slot-pick" data-nav="catalog">Elegir</button>`}
+    </div>`;
+  }).join("");
+  $("#left-panel").innerHTML = `
+    <h2 class="panel-title">Composición</h2>
+    <p class="panel-sub">por categorías</p>
+    ${rows}
+    <p class="studio-note">Composición editorial: muestra las piezas reales de la colección.
+    No simula ajuste, talla ni prueba sobre el cuerpo.</p>`;
+}
+
+function renderCollectionStage() {
+  const items = selectedIds().map(findItem).filter(Boolean);
+  const outfit = state.selection.outfitId
+    ? OUTFITS.find(o => o.id === state.selection.outfitId)
+    : matchOutfit(selectedIds());
+  const stage = $("#studio-stage-wrap");
+  if (!items.length) {
+    stage.innerHTML = `<div class="empty-note stage-empty">
+      <p>Tu look está vacío. Empieza por la colección.</p>
+      <button class="btn btn-primary" data-nav="catalog">Explorar la colección</button></div>`;
+    return;
+  }
+  stage.innerHTML = `
+    ${lookVisual(items, outfit, "stage-visual")}
+    ${outfit ? `<p class="orbit-hint">${outfit.name} — look de la colección</p>`
+             : `<p class="orbit-hint">Look propio — tablero editorial de tus piezas</p>`}`;
+}
+
+/* ================= Estudio común ================= */
 
 function renderSelection() {
   const box = $("#selection-contents");
-  const product = state.selection.productId ? findItem(state.selection.productId) : null;
-  const combos = state.selection.comboIds.map(findItem).filter(Boolean);
-  const items = [product, ...combos].filter(Boolean);
-
+  const items = selectedIds().map(findItem).filter(Boolean);
   if (!items.length) {
-    box.innerHTML = `<p class="sel-empty">Aún no hay piezas. Elige un bolso en la colección
-      y complementos en la órbita.</p>`;
+    box.innerHTML = `<p class="sel-empty">Aún no hay piezas en tu look.</p>`;
     $("#btn-save-look").disabled = true;
     return;
   }
   $("#btn-save-look").disabled = false;
-
-  const total = items.reduce((sum, it) => sum + it.price, 0);
+  const total = items.reduce((sum, it) => sum + (it.price || 0), 0);
   box.innerHTML = items.map(it => `
     <div class="sel-item">
       ${it.shape || it.part ? productArt(it) : comboSVG(it)}
-      <span class="sel-item-name">${it.name}</span>
-      <span class="sel-item-price">${formatPrice(it.price)}</span>
+      <div class="sel-item-body">
+        <span class="sel-item-cat">${slotLabel(slotOf(it)).replace(/^combo.*/, "Complemento")}</span>
+        <span class="sel-item-name">${it.name}</span>
+      </div>
+      ${it.price ? `<span class="sel-item-price">${formatPrice(it.price)}</span>` : ""}
       <button class="sel-remove" data-remove="${it.id}" aria-label="Quitar ${it.name}">×</button>
     </div>`).join("")
     + (total ? `<div class="sel-total"><span>Total del look</span><span>${formatPrice(total)}</span></div>` : "");
 }
 
 function renderStudio() {
-  renderAvatarControls();
-  renderAvatarStage();
-  renderOrbit();
+  if (external()) { renderCompositionPanel(); renderCollectionStage(); }
+  else renderDemoStudio();
   renderSelection();
 }
 
@@ -237,23 +328,24 @@ document.addEventListener("click", e => {
   if (av) {
     state.avatar[av.dataset.avatar] = av.dataset.value;
     save();
-    renderAvatarControls();
-    renderAvatarStage();
+    renderStudio();
     renderHero();
     return;
   }
   const combo = e.target.closest("[data-combo]");
   if (combo) {
-    const added = toggleCombo(combo.dataset.combo);
-    if (added) track("seleccion", { comboId: combo.dataset.combo });
-    renderOrbit(); renderAvatarStage(); renderSelection();
+    const c = findItem(combo.dataset.combo);
+    setSlot(slotOf(c), c.id);
+    track("seleccion", { comboId: c.id });
+    renderStudio();
     return;
   }
+  const un = e.target.closest("[data-unslot]");
+  if (un) { removeSlot(un.dataset.unslot); renderStudio(); return; }
   const rm = e.target.closest("[data-remove]");
   if (rm) {
-    const id = rm.dataset.remove;
-    if (state.selection.productId === id) setProduct(null);
-    else if (state.selection.comboIds.includes(id)) toggleCombo(id);
+    const it = findItem(rm.dataset.remove);
+    if (it) removeSlot(slotOf(it));
     renderStudio();
   }
 });
@@ -261,29 +353,32 @@ document.addEventListener("click", e => {
 $("#btn-clear-look").addEventListener("click", () => { clearSelection(); renderStudio(); });
 
 $("#btn-save-look").addEventListener("click", () => {
-  const product = state.selection.productId ? findItem(state.selection.productId) : null;
-  const name = product ? `Look ${product.name}` : "Look MIRRORA";
+  const ids = selectedIds();
+  const outfit = state.selection.outfitId ? OUTFITS.find(o => o.id === state.selection.outfitId) : matchOutfit(ids);
+  const name = outfit ? outfit.name : `Mi look ${state.looks.length + 1}`;
+  if (outfit) state.selection.outfitId = outfit.id;
   const look = saveLook(name);
-  track("look_guardado", { lookId: look.id, productId: look.productId, comboIds: look.comboIds });
+  track("look_guardado", { lookId: look.id, itemIds: look.itemIds, outfitId: look.outfitId });
   renderBadges();
   toast(`Look guardado · ${BRAND.reward}`);
   goto("looks");
 });
 
-/* ================= Looks ================= */
+/* ================= Mis looks ================= */
 
 function lookCard(look) {
-  const product = look.productId ? findItem(look.productId) : null;
-  const combos = look.comboIds.map(findItem).filter(Boolean);
-  const names = [product, ...combos].filter(Boolean).map(i => i.name).join(" · ");
-  const total = [product, ...combos].filter(Boolean).reduce((s, i) => s + i.price, 0);
+  const items = itemsOfLook(look);
+  const outfit = look.outfitId ? OUTFITS.find(o => o.id === look.outfitId) : matchOutfit(items.map(i => i.id));
+  const names = items.map(i => i.name).join(" · ");
+  const total = items.reduce((s, i) => s + (i.price || 0), 0);
   return `
   <article class="look-card">
-    <div class="look-art">${avatarSVG(look.avatar, product, look.comboIds)}</div>
+    <div class="look-art">${lookVisual(items, outfit, "thumb") || avatarSVG(look.avatar || state.avatar, null, [])}</div>
     <div class="look-meta">
       <h3 class="look-name">${look.name}</h3>
-      <p class="look-items">${names || "Avatar"}${total ? " — " + formatPrice(total) : ""}</p>
+      <p class="look-items">${names || "Composición"}${total ? " — " + formatPrice(total) : ""}</p>
       <div class="look-actions">
+        <button class="btn btn-ghost" data-reopen="${look.id}">Reabrir</button>
         <button class="btn btn-ghost" data-qr="${look.id}">QR a móvil</button>
         <button class="btn btn-primary" data-cart="${look.id}">Al carrito</button>
       </div>
@@ -295,10 +390,22 @@ function lookCard(look) {
 function renderLooks() {
   $("#looks-grid").innerHTML = state.looks.length
     ? state.looks.map(lookCard).join("")
-    : `<p class="empty-note">Todavía no has guardado ningún look. Crea uno en el estudio.</p>`;
+    : `<div class="empty-note"><p>Todavía no has guardado ningún look.</p>
+       <button class="btn btn-primary" data-nav="catalog">Explorar la colección</button>
+       <button class="btn btn-ghost" data-nav="studio">Abrir el estudio</button></div>`;
 }
 
 document.addEventListener("click", e => {
+  const reopen = e.target.closest("[data-reopen]");
+  if (reopen) {
+    const look = state.looks.find(l => l.id === reopen.dataset.reopen);
+    const slots = look.slots || {};
+    if (!Object.keys(slots).length) itemsOfLook(look).forEach(it => { slots[slotOf(it)] = it.id; });
+    loadComposition(slots, look.outfitId || null);
+    goto("studio");
+    toast(`${look.name} reabierto en el estudio`);
+    return;
+  }
   const qrBtn = e.target.closest("[data-qr]");
   if (qrBtn) {
     const look = state.looks.find(l => l.id === qrBtn.dataset.qr);
@@ -312,7 +419,7 @@ document.addEventListener("click", e => {
   const cartBtn = e.target.closest("[data-cart]");
   if (cartBtn) {
     const look = state.looks.find(l => l.id === cartBtn.dataset.cart);
-    const ids = [look.productId, ...look.comboIds].filter(Boolean).join(",");
+    const ids = itemsOfLook(look).map(i => i.id).join(",");
     const url = BRAND.cartUrlTemplate
       .replace("{items}", encodeURIComponent(ids))
       .replace("{campaign}", encodeURIComponent(BRAND.campaignId))
@@ -332,7 +439,7 @@ document.addEventListener("click", e => {
 $("#qr-modal-close").addEventListener("click", () => { $("#qr-modal").hidden = true; });
 $("#qr-modal").addEventListener("click", e => { if (e.target.id === "qr-modal") e.target.hidden = true; });
 
-/* ================= Badges / sesión ================= */
+/* ================= Badges / sesión / tema ================= */
 
 function renderBadges() {
   const bl = $("#badge-looks"), bw = $("#badge-wishlist");
@@ -347,10 +454,19 @@ function renderCampaignBanner(session) {
   el.hidden = false;
 }
 
+function applyBrandTheme() {
+  const t = BRAND.theme || {};
+  const r = document.documentElement.style;
+  if (t.ink) r.setProperty("--ink", t.ink);
+  if (t.brass) r.setProperty("--brass", t.brass);
+  if (t.ivory) r.setProperty("--ivory", t.ivory);
+}
+
 /* ================= Init ================= */
 
 await initCatalog();
 applyBrandTheme();
+applyCatalogCopy();
 const session = readIncomingHandoff();
 renderCampaignBanner(session || state.session);
 $("#foot-brand").textContent = BRAND.name;
@@ -358,7 +474,6 @@ renderHero();
 renderBadges();
 subscribe(renderBadges);
 
-// Si el handoff trae un look de campaña, aterrizar en catálogo; si no, home.
 if (session) goto("catalog");
 
 if ("serviceWorker" in navigator && location.protocol === "https:") {

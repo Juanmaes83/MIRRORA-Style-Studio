@@ -43,7 +43,7 @@
           </p>
           <div class="hero-actions">
             <button class="btn btn-primary" data-nav="catalog">Descubrir la colección</button>
-            <button class="btn btn-ghost" data-nav="studio">Crear mi avatar</button>
+            <button class="btn btn-ghost" data-nav="studio" id="hero-cta-studio">Crear mi avatar</button>
           </div>
         </div>
         <div class="hero-stage" id="hero-stage" aria-hidden="true"></div>
@@ -70,24 +70,14 @@
     <section class="view" data-view="studio">
       <div class="studio-layout">
 
-        <aside class="studio-panel avatar-panel">
-          <h2 class="panel-title">Tu avatar</h2>
-          <p class="panel-sub">Nivel 1 · editorial, sin foto</p>
-          <div id="avatar-controls"></div>
-        </aside>
+        <aside class="studio-panel avatar-panel" id="left-panel"></aside>
 
-        <div class="studio-stage">
-          <div class="orbit-wrap">
-            <div class="orbit-ring" id="orbit-ring" aria-label="Órbita de combinaciones"></div>
-            <div class="avatar-stage" id="avatar-stage"></div>
-          </div>
-          <p class="orbit-hint">Órbita de combinaciones — toca un complemento para añadirlo al look</p>
-        </div>
+        <div class="studio-stage" id="studio-stage-wrap"></div>
 
         <aside class="studio-panel selection-panel">
           <div class="envelope" id="selection-envelope">
             <div class="envelope-flap"></div>
-            <h2 class="panel-title">Sobre de selección</h2>
+            <h2 class="panel-title">Tu look</h2>
             <div id="selection-contents"></div>
             <div class="envelope-actions">
               <button class="btn btn-primary btn-block" id="btn-save-look">Guardar look</button>
@@ -103,7 +93,7 @@
     <section class="view" data-view="looks">
       <div class="view-head">
         <h2>Mis looks</h2>
-        <p>Tus recuerdos de estilo. Escanéalos para llevarlos al móvil o pásalos al carrito.</p>
+        <p>Las composiciones que has guardado. Reábrelas, escanéalas para llevarlas al móvil o pásalas al carrito.</p>
       </div>
       <div class="looks-grid" id="looks-grid"></div>
     </section>

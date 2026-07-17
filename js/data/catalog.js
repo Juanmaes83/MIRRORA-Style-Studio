@@ -150,6 +150,28 @@ export async function initCatalog() {
   }
 }
 
+// Categorías funcionales del look. Las prendas externas usan su `part` real de
+// wardrobe; el catálogo demo (bolsos) y los complementos conservan sus huecos.
+export const SLOT_ORDER = ["upperbody", "wholebody_up", "lowerbody", "shoes", "accessories_up", "bag"];
+export const SLOT_LABELS = {
+  upperbody: "Parte superior",
+  wholebody_up: "Capa exterior",
+  lowerbody: "Parte inferior",
+  shoes: "Calzado",
+  accessories_up: "Accesorio",
+  bag: "Bolso"
+};
+
+export function slotOf(item) {
+  if (item.part) return item.part;
+  if (item.shape) return "bag";
+  return "combo:" + item.id; // complementos demo: conviven varios
+}
+
+export function slotLabel(slot) {
+  return SLOT_LABELS[slot] || "Complemento";
+}
+
 // Arte de producto para tarjetas/listas: imagen real si existe, SVG si no.
 export function productArt(p) {
   return p.image

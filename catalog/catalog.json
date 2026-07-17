@@ -3,7 +3,7 @@
   "brandId": "maison-demo",
   "campaignId": "wardrobe-real-01",
   "currency": "EUR",
-  "generatedAt": "2026-07-17T13:46:41.046Z",
+  "generatedAt": "2026-07-17T14:48:41.555Z",
   "source": "wardrobe",
   "products": [
     {
@@ -42,8 +42,8 @@
     {
       "id": "import-04396ccb-21b1-4455-9373-af2ebe12c745",
       "name": "tan blazer",
-      "line": "Parte superior",
-      "part": "upperbody",
+      "line": "Capa exterior",
+      "part": "wholebody_up",
       "price": 0,
       "color": "#c99a64",
       "secondaryColor": "#a87443",
