@@ -59,7 +59,54 @@ js/data/brand.js      contrato de consola de marca (white-label)
 js/data/catalog.js    catálogo piloto + complementos (SVG inline)
 js/lib/qrcode.js      vendored, MIT
 sw.js                 service worker cache-first
+platform.html          modo plataforma: catálogo en vivo de Fashion Studio SOL
+js/platform-app.js     lógica del modo plataforma (catálogo, look, SavedLook, QR)
+css/platform.css       estilos del modo plataforma
 ```
+
+## Fashion Studio SOL — Modo plataforma en vivo
+
+Todo lo anterior (`index.html`, Fase 1, catálogo piloto local, wishlist/QR con
+`localStorage`) sigue intacto y es el punto de entrada por defecto. Además existe un
+**modo plataforma**, un punto de entrada independiente que consume el catálogo real y
+persistente de [Fashion Studio SOL](https://github.com/Juanmaes83/Fashion-Studio-SOL)
+en lugar del catálogo piloto local:
+
+```
+platform.html?api=http://127.0.0.1:8787&project=sol-store
+```
+
+`api` y `project` son parámetros de URL con esos valores por defecto; no requieren build
+ni variables de entorno, ya que esta app sigue siendo HTML/JS vanilla servido estático.
+
+### Qué hace
+
+- Lee el catálogo publicado en vivo desde `GET {api}/public/projects/{project}/catalog`
+  (prendas, outfits y sus assets de presentación) — no un JSON local ni un export manual.
+- Permite componer un look y guardarlo vía
+  `POST {api}/public/projects/{project}/saved-looks`, que persiste la composición en
+  PostgreSQL y devuelve un token no reversible.
+- Genera un QR (con el mismo `js/lib/qrcode.js` vendorizado) que codifica una URL de
+  vuelta a `platform.html?...&savedLook={token}`. Abrir esa URL en otro navegador o
+  dispositivo recupera exactamente la misma composición leyendo
+  `GET {api}/public/saved-looks/{token}` desde PostgreSQL — multidispositivo real, no
+  solo el mismo origen/`localStorage`.
+
+### Dependencia
+
+Este modo no tiene catálogo ni backend propio: depende funcionalmente de que
+**Fashion-Studio-SOL PR #3** (`phase-2/persistence-foundation`) esté corriendo y tenga
+un catálogo publicado (acción "Publicar catálogo seguro" en `/studio`). Sin esa API
+disponible, `platform.html` no tiene datos que mostrar.
+
+### Relación con Fase 1
+
+El QR/wishlist de Fase 1 (`mirrora-handoff/v0.1`, solo `localStorage`, sin backend, sin
+datos personales) sigue existiendo tal cual en `index.html` y no se ha tocado. El modo
+plataforma es un flujo adicional, con persistencia real en servidor, para el catálogo y
+los looks de la integración con Fashion Studio SOL — no sustituye ni modifica el flujo
+de Fase 1. Las reglas duras del blueprint (sin IA pesada dentro de esta PWA, sin datos
+biométricos, sin promesa de talla/ajuste) también aplican al modo plataforma.
 
 ## Reglas duras (del blueprint)
 
