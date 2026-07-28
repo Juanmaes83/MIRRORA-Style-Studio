@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { test } from "node:test";
 import { createBridge } from "./server.mjs";
@@ -20,6 +21,23 @@ test("healthcheck is public and declares the simulated bridge", async () => {
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), { schema: "mirrora-ai-bridge-health/v0.1", status: "ok", providers: "simulated" });
   });
+});
+
+test("bridge entrypoint binds the platform PORT on all interfaces", async () => {
+  const child = spawn(process.execPath, ["mirrora-ai-bridge/server.mjs"], {
+    cwd: process.cwd(),
+    env: { ...process.env, MIRRORA_AI_BRIDGE_TOKEN: "entrypoint-token", PORT: "0" },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  try {
+    const [output] = await once(child.stdout, "data");
+    const port = output.toString().match(/0\.0\.0\.0:(\d+)/)?.[1];
+    assert.ok(port, "El bridge debe anunciar un puerto accesible por la plataforma");
+    assert.equal((await fetch(`http://127.0.0.1:${port}/health`)).status, 200);
+  } finally {
+    child.kill();
+    await once(child, "exit");
+  }
 });
 
 test("bridge requires authentication and validates versioned asset requests", async () => {

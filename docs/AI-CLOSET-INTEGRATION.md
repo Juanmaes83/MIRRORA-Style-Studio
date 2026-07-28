@@ -104,6 +104,15 @@ ni respuestas. Esto es una herramienta de preview local, no el sistema de sesion
 produccion: antes del despliegue se sustituira por autenticacion de usuario o sesion en el
 borde del backend.
 
+### Staging en Railway y Vercel
+
+Railway arranca `npm run start:bridge`; el proceso escucha en `0.0.0.0` y usa el `PORT`
+inyectado por la plataforma. Configurar `/health` como healthcheck. En Vercel, la
+Function `api/ai-closet/[...path].mjs` es el unico proxy publico: anade el token de
+bridge desde sus variables server-side y elimina cualquier `Authorization` del browser.
+No usar una reescritura estatica para esta responsabilidad, ya que no puede inyectar el
+secreto.
+
 ## Fase 5A: procesado controlado
 
 El bridge admite categorizacion y eliminacion de fondo solo para fixtures explicitamente

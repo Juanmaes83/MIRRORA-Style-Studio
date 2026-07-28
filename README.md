@@ -23,6 +23,11 @@ encamina exclusivamente `/api/ai-closet` al bridge. El navegador no recibe el to
 el proxy loopback lo inyecta en servidor. Ejecutar con
 `MIRRORA_AI_BRIDGE_TOKEN=<token> PORT=4181 npm run start:preview`.
 
+**Despliegue staging:** Railway ejecuta el bridge en `0.0.0.0:$PORT` y verifica
+`/health`. Vercel entrega la PWA y su Function `api/ai-closet/[...path].mjs` reenvia
+las rutas relativas al bridge. Sus dos variables server-side son
+`MIRRORA_AI_BRIDGE_ORIGIN` y `MIRRORA_AI_BRIDGE_TOKEN`; ninguna se expone al navegador.
+
 **Fase 5A - procesado controlado: en curso.** El bridge procesa exclusivamente un
 fixture real autorizado del catalogo con un adaptador simulado: categorizacion, resultado
 con fondo transparente, estado, reintento y borrado. No existe aun una llamada externa.

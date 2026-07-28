@@ -120,7 +120,8 @@ function idempotentJob({ request, idempotency, operation, assetId, now }) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT || 8787);
-  createBridge({ token: process.env.MIRRORA_AI_BRIDGE_TOKEN }).listen(port, "127.0.0.1", () => {
-    console.log(`mirrora-ai-bridge listening on http://127.0.0.1:${port}`);
+  const host = process.env.HOST || "0.0.0.0";
+  createBridge({ token: process.env.MIRRORA_AI_BRIDGE_TOKEN }).listen(port, host, () => {
+    console.log(`mirrora-ai-bridge listening on http://${host}:${port}`);
   });
 }
