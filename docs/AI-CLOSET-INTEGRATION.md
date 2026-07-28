@@ -138,13 +138,25 @@ GET https://mirrora-style-studio-git-featu-05e60a-juanma-espinosas-projects.verc
 -> { "schema": "ai-closet-closet-response/v0.1", "campaignId": "vercel-preview", "items": [] }
 ```
 
-## Preparacion tecnica de Fase 5
+## Fase 5A: contrato y proveedor apagado
 
 El bridge admite categorizacion y eliminacion de fondo solo para fixtures explicitamente
 autorizados en `processing.mjs`. Cada job conserva estado, resultado, numero de intentos
 y puede borrarse. El adaptador inicial es simulado: sirve para validar el contrato y el
-flujo sin enviar imagenes a terceros. La integracion con OpenAI puede analizar una imagen
-por URL o fichero mediante Responses, pero requerira un adaptador server-side, una clave
-de entorno, URLs temporales y una aprobacion de coste y retencion antes de activarse.
-Esto no constituye el inicio de la Fase 5 real: faltan proveedor, persistencia y la
-validacion explicita de calidad visual, latencia y coste.
+flujo sin enviar imagenes a terceros.
+
+La seleccion de proveedor vive solo en el backend:
+
+```text
+MIRRORA_AI_ASSET_PROVIDER=simulated
+MIRRORA_AI_ASSET_PROVIDER=openai
+```
+
+`simulated` es el valor por defecto y mantiene el entorno sin coste ni llamadas externas.
+`openai` esta declarado como adaptador, pero devuelve `provider_not_enabled` aunque exista
+`OPENAI_API_KEY`; no se activara hasta la aprobacion explicita de Fase 5B. Si falta la
+clave, devuelve `provider_not_configured`. Esto permite configurar y probar el camino de
+errores sin exponer secretos ni activar gasto.
+
+Fase 5A no cierra la Fase 5 completa: faltan proveedor real, persistencia y la validacion
+explicita de calidad visual, latencia y coste.

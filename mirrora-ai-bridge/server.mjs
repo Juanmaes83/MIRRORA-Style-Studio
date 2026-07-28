@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
-import { createProcessingService } from "./processing.mjs";
+import { createProcessingService, createProcessingServiceFromEnv } from "./processing.mjs";
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" };
 const ASSET_SCHEMA = "ai-closet-asset-request/v0.1";
@@ -132,7 +132,10 @@ function idempotentJob({ request, idempotency, operation, assetId, now }) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT || 8787);
   const host = process.env.HOST || "0.0.0.0";
-  const bridge = createBridge({ token: process.env.MIRRORA_AI_BRIDGE_TOKEN });
+  const bridge = createBridge({
+    token: process.env.MIRRORA_AI_BRIDGE_TOKEN,
+    processing: createProcessingServiceFromEnv(),
+  });
   bridge.listen(port, host, () => {
     const address = bridge.address();
     const activePort = typeof address === "object" && address ? address.port : port;

@@ -42,13 +42,16 @@ responde correctamente a `/api/ai-closet/closet?campaign=vercel-preview` con sch
 `ai-closet-closet-response/v0.1` e `items: []`. No hay proveedor IA, clave de proveedor,
 foto personal, R2 ni Supabase conectados en este entorno.
 
-**Preparacion tecnica de Fase 5: disponible, pero Fase 5 aun no iniciada.** El bridge
-incluye un fixture real autorizado y un adaptador simulado con categorizacion, resultado
-de fondo transparente, estado, reintento y borrado. No existe una llamada externa,
-persistencia ni validacion de calidad, latencia o coste.
+**Fase 5A - contrato y proveedor apagado: iniciada.** El bridge incluye un fixture real
+autorizado, un selector server-side de proveedor (`MIRRORA_AI_ASSET_PROVIDER`) y un
+adaptador simulado con categorizacion, resultado de fondo transparente, estado,
+reintento y borrado. El valor por defecto sigue siendo `simulated`. El adaptador
+`openai` esta declarado pero devuelve error controlado hasta aprobacion explicita de
+Fase 5B. No existe una llamada externa, persistencia ni validacion de calidad, latencia
+o coste.
 
-**Siguiente hito:** iniciar Fase 5 real, conectando un proveedor por adaptador y
-comparando calidad visual, latencia y coste antes de persistir resultados.
+**Siguiente hito:** Fase 5B, conectar categorizacion real con proveedor por adaptador y
+comparar calidad visual, latencia y coste antes de persistir resultados.
 
 PWA de consumidor: motor de decisión y conversión para moda.
 

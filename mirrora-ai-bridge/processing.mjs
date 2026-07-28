@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { createAssetAdapter, createSimulatedAdapter, readAssetProvider } from "./providers/asset-adapters.mjs";
 
 export const AUTHORIZED_FIXTURES = new Map([
   ["import-e3ea0305-1680-4ec7-85e0-1bbb7d58d827", {
@@ -52,14 +53,11 @@ export function createProcessingService({ adapter = createSimulatedAdapter(), au
   return { start, retry, get, purge };
 }
 
-export function createSimulatedAdapter() {
-  return {
-    async process({ operation, assetId, fixture }) {
-      if (operation === "categorize") return { schema: "mirrora-garment-metadata/v0.1", simulated: true, assetId, category: fixture.category, garmentType: fixture.garmentType, material: fixture.material, color: fixture.color, confidence: 1 };
-      if (operation === "remove-background") return { schema: "mirrora-background-removal-result/v0.1", simulated: true, assetId, processedAssetId: `${assetId}:transparent`, source: fixture.source, alphaPreserved: true };
-      throw problem("unsupported_operation", "Operacion de procesado no soportada", 400);
-    },
-  };
+export function createProcessingServiceFromEnv({ env = process.env, now = () => Date.now() } = {}) {
+  return createProcessingService({
+    adapter: createAssetAdapter({ provider: readAssetProvider(env), env }),
+    now,
+  });
 }
 
 function problem(code, message, status) { return Object.assign(new Error(message), { code, status }); }
