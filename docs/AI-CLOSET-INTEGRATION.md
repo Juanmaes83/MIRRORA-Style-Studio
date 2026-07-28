@@ -40,6 +40,20 @@ GET    /try-on/:jobId/result
 DELETE /try-on/:jobId
 ```
 
+La version de transporte es `ai-closet-gateway/v0.1`. La fuente canonica del contrato
+vive en Fashion-Studio-SOL: `packages/ai-closet-engine/gateway-contract.v0.1.json`.
+MIRRORA declara la misma version y sus pruebas comprueban rutas, payloads e
+`Idempotency-Key`; no mantiene una copia divergente del schema.
+
+Antes de una operacion de IA sobre un asset, el cliente envia:
+
+```json
+{
+  "schema": "ai-closet-asset-request/v0.1",
+  "assetId": "asset-temporal-001"
+}
+```
+
 El payload de try-on debe incluir consentimiento y asset temporal:
 
 ```json
@@ -61,4 +75,5 @@ El payload de try-on debe incluir consentimiento y asset temporal:
 - El resultado tiene TTL y purge.
 - No se promete talla ni fit fisico.
 - El frontend no contiene claves de proveedores.
-
+- Un look y sus prendas se validan antes de solicitar try-on; el gateway vuelve a
+  comprobar pertenencia, consentimiento y caducidad.

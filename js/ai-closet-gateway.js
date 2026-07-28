@@ -9,15 +9,19 @@ const BLOCKED_PROVIDER_HOSTS = [
 ];
 
 export const AI_CLOSET_GATEWAY_BASE = "/api/ai-closet";
+export const AI_CLOSET_GATEWAY_CONTRACT_VERSION = "ai-closet-gateway/v0.1";
 
-export function createAiClosetGateway({ baseUrl = AI_CLOSET_GATEWAY_BASE, fetchImpl = window.fetch.bind(window) } = {}) {
+export function createAiClosetGateway({ baseUrl = AI_CLOSET_GATEWAY_BASE, fetchImpl = globalThis.fetch?.bind(globalThis) } = {}) {
   const safeBaseUrl = normalizeGatewayBaseUrl(baseUrl);
+  if (typeof fetchImpl !== "function") throw new Error("fetchImpl requerido");
 
   async function request(path, options = {}) {
+    const { idempotencyKey, ...requestOptions } = options;
     const response = await fetchImpl(`${safeBaseUrl}${path}`, {
-      ...options,
+      ...requestOptions,
       headers: {
         "content-type": "application/json",
+        ...(idempotencyKey ? { "idempotency-key": idempotencyKey } : {}),
         ...(options.headers || {})
       },
       body: options.body ? JSON.stringify(options.body) : undefined
@@ -32,6 +36,8 @@ export function createAiClosetGateway({ baseUrl = AI_CLOSET_GATEWAY_BASE, fetchI
 
   return {
     loadCloset: campaignId => request(`/closet?campaign=${encodeURIComponent(campaignId)}`),
+    categorize: (body, idempotencyKey) => request("/categorize", { method: "POST", body, idempotencyKey }),
+    removeBackground: (body, idempotencyKey) => request("/remove-background", { method: "POST", body, idempotencyKey }),
     submitTryOn: body => request("/try-on", { method: "POST", body }),
     getTryOnStatus: jobId => request(`/try-on/${encodeURIComponent(jobId)}`, { method: "GET" }),
     getTryOnResult: jobId => request(`/try-on/${encodeURIComponent(jobId)}/result`, { method: "GET" }),
@@ -45,7 +51,8 @@ export function normalizeGatewayBaseUrl(baseUrl) {
   }
 
   const value = baseUrl.trim().replace(/\/+$/, "");
-  const host = new URL(value, window.location.origin).host;
+  const origin = globalThis.location?.origin || "http://localhost";
+  const host = new URL(value, origin).host;
   if (BLOCKED_PROVIDER_HOSTS.some(blocked => host === blocked || host.endsWith(`.${blocked}`))) {
     throw new Error("Usar gateway backend, no proveedor IA directo");
   }
@@ -53,7 +60,20 @@ export function normalizeGatewayBaseUrl(baseUrl) {
   return value;
 }
 
+export function buildAssetPayload(assetId) {
+  if (typeof assetId !== "string" || !assetId.trim()) throw new Error("assetId requerido");
+  return {
+    schema: "ai-closet-asset-request/v0.1",
+    assetId: assetId.trim()
+  };
+}
+
 export function buildTryOnPayload({ session, lookId, itemIds, consentId, personAssetId }) {
+  if (typeof lookId !== "string" || !lookId.trim()) throw new Error("lookId requerido para try-on");
+  if (!Array.isArray(itemIds) || !itemIds.length || itemIds.some(itemId => typeof itemId !== "string" || !itemId.trim())) {
+    throw new Error("itemIds requiere al menos una prenda valida");
+  }
+  if (new Set(itemIds).size !== itemIds.length) throw new Error("itemIds no puede contener duplicados");
   if (!consentId) throw new Error("consentId requerido para try-on");
   if (!personAssetId) throw new Error("personAssetId requerido para try-on");
 
@@ -61,10 +81,9 @@ export function buildTryOnPayload({ session, lookId, itemIds, consentId, personA
     schema: "mirrora-tryon-request/v0.1",
     brandId: session?.brandId || null,
     campaignId: session?.campaignId || null,
-    lookId: lookId || null,
-    itemIds: Array.isArray(itemIds) ? itemIds : [],
+    lookId: lookId.trim(),
+    itemIds: itemIds.map(itemId => itemId.trim()),
     consentId,
     personAssetId
   };
 }
-

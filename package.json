@@ -2,8 +2,10 @@
   "name": "mirrora-style-studio",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "MIRRORA Style Studio — PWA de decisión y conversión para moda",
   "scripts": {
-    "dev": "npx serve . -l 4180"
+    "dev": "npx serve . -l 4180",
+    "test": "node --test tests/ai-closet-gateway.test.mjs"
   }
 }

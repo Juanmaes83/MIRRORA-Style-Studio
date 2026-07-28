@@ -7,6 +7,16 @@ on:
     branches: ["**"]
 
 jobs:
+  ai-closet-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Versioned AI Closet frontend contract
+        run: npm test
+
   syntax-and-catalog:
     runs-on: ubuntu-latest
     steps:
