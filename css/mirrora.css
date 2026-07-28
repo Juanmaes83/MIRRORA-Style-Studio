@@ -389,3 +389,29 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 500; letter-spacing: 0.01em
   .orbit-item svg { width: 36px; height: 36px; }
   .orbit-label { display: none; }
 }
+
+/* AI Closet prototype */
+.closet-head { display:flex; justify-content:space-between; gap:24px; align-items:end; margin-bottom:28px; }
+.closet-head h2 { font-size:clamp(2rem,4vw,3.3rem); }
+.closet-head p { color:var(--ink-soft); max-width:58ch; }
+.closet-shell { display:grid; grid-template-columns:260px minmax(360px,1fr) 240px; gap:18px; align-items:start; }
+.closet-rail,.closet-detail,.closet-canvas-panel { background:var(--card); border:1px solid var(--line); border-radius:8px; }
+.closet-rail { padding:14px; }
+.closet-filter-list { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:14px; }
+.closet-grid { display:grid; gap:8px; max-height:570px; overflow:auto; }
+.closet-card { display:grid; grid-template-columns:54px 1fr; align-items:center; gap:10px; padding:8px; text-align:left; border:1px solid transparent; border-radius:6px; }
+.closet-card:hover,.closet-card.is-active { border-color:var(--brass); background:var(--ivory); }
+.closet-art img { width:48px; height:58px; display:block; object-fit:contain; }
+.closet-card strong,.closet-card small { display:block; }.closet-card small,.detail-note,.canvas-note { color:var(--ink-soft); font-size:.75rem; }
+.closet-canvas-panel { padding:16px; }.canvas-topline { display:flex; justify-content:space-between; font-size:.68rem; letter-spacing:.18em; color:var(--ink-soft); }
+.closet-canvas { position:relative; margin-top:12px; min-height:530px; overflow:hidden; background:linear-gradient(145deg,#e2ded5,#f7f3ec 56%,#d9d1c4); border-radius:6px; }
+.mannequin-upload { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; font-size:.76rem; color:var(--ink-soft); }.mannequin-upload label { color:var(--ink); font-weight:600; }.mannequin-upload input { max-width:205px; font-size:.72rem; }.mannequin-upload button,.transform-controls button { border:1px solid var(--line); border-radius:5px; padding:6px 8px; font-size:.7rem; }.mannequin-upload small { width:100%; }
+.canvas-mannequin { position:absolute; inset:4% 18%; width:64%; height:92%; object-fit:contain; opacity:.8; pointer-events:none; }.canvas-mannequin-placeholder { background:linear-gradient(180deg,transparent 4%,rgba(176,141,79,.12) 4%,rgba(176,141,79,.12) 96%,transparent 96%); clip-path:polygon(47% 0,53% 0,58% 13%,74% 24%,68% 40%,59% 34%,62% 100%,38% 100%,41% 34%,32% 40%,26% 24%,42% 13%); }
+.closet-canvas:before { content:""; position:absolute; inset:8%; border:1px solid rgba(176,141,79,.35); border-radius:50%; }
+.canvas-empty { position:absolute; inset:0; display:grid; place-content:center; text-align:center; gap:6px; color:var(--ink-soft); }.canvas-empty span { font-family:var(--serif); font-size:1.4rem; }
+.body-guides { position:absolute; inset:4% 18%; pointer-events:none; z-index:5; }.body-guides i { position:absolute; left:50%; transform:translateX(-50%); border-top:1px dashed rgba(176,141,79,.55); width:42%; }.guide-shoulders { top:18%; }.guide-waist { top:43%; width:30% !important; }.guide-hips { top:57%; width:34% !important; }.guide-feet { top:87%; width:38% !important; }
+.canvas-garment { position:absolute; width:var(--garment-width,38%); height:42%; padding:5px; touch-action:none; cursor:grab; border:1px solid transparent; border-radius:6px; }.canvas-garment:active { cursor:grabbing; }.canvas-garment img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 16px 14px rgba(22,20,18,.18)); }.canvas-garment.is-selected { border-color:var(--brass); background:rgba(250,247,241,.55); }.canvas-handle { display:none; position:absolute; right:-7px; bottom:-7px; width:14px; height:14px; border-radius:50%; background:var(--brass); border:2px solid var(--ivory); }.canvas-garment.is-selected .canvas-handle { display:block; }
+.closet-detail { padding:16px; }.detail-kicker { font-size:.65rem; letter-spacing:.16em; text-transform:uppercase; color:var(--brass); }.detail-art { padding:12px 0; }.detail-art img { width:100%; height:210px; object-fit:contain; }.detail-status { display:inline-block; margin:10px 0; padding:4px 8px; border:1px solid var(--line); border-radius:999px; font-size:.7rem; }.detail-note { margin-top:14px; line-height:1.5; }
+.transform-controls { display:grid; gap:7px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line); }.transform-controls span { font-size:.68rem; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-soft); }.transform-controls output { font-size:.72rem; color:var(--ink-soft); }.transform-controls div { display:grid; grid-template-columns:1fr 1fr; gap:6px; }.transform-controls button:hover { border-color:var(--brass); }.danger-link { color:#9b3838; }
+@media (max-width:1050px) { .closet-shell { grid-template-columns:230px 1fr; }.closet-detail { grid-column:1/-1; display:grid; grid-template-columns:120px 1fr; gap:12px; }.detail-art { grid-row:span 4; }.closet-detail .btn,.detail-note { grid-column:2; } }
+@media (max-width:700px) { .closet-head,.closet-shell { display:grid; grid-template-columns:1fr; }.closet-head .btn { width:100%; }.closet-grid { grid-template-columns:repeat(2,1fr); max-height:none; }.closet-card { grid-template-columns:42px 1fr; }.closet-art img { width:40px; }.closet-canvas { min-height:420px; }.closet-detail { display:block; }.canvas-garment { height:38%; } }

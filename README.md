@@ -1,5 +1,19 @@
 # MIRRORA Style Studio
 
+## Estado de entrega
+
+**Fase 2R - Armario Real y Canvas Local: completada.**
+
+- El armario consume las imagenes reales de `catalog/catalog.json`; no usa prendas SVG.
+- El canvas permite foto local de cuerpo entero como referencia, mover, escalar, girar,
+  ordenar capas, eliminar y guardar una composicion local.
+- La foto de referencia no se sube ni se persiste fuera del navegador y no es try-on.
+- El gateway de IA sigue siendo un contrato seguro sin claves de proveedor en frontend.
+
+**Siguiente fase:** `mirrora-ai-bridge` con respuestas simuladas, autenticacion,
+validacion, limites, healthcheck y contrato `/api/ai-closet`. La categorizacion,
+eliminacion de fondo y try-on solo se conectaran despues de validar ese bridge.
+
 PWA de consumidor: motor de decisión y conversión para moda.
 
 ```
