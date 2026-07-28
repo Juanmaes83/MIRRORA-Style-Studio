@@ -19,6 +19,7 @@ completo de arquitectura está en [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md)
 - ✅ CTA a carrito white-label (plantilla en `js/data/brand.js`)
 - ✅ Funnel de eventos local con endpoint conmutables (`js/analytics.js`)
 - ✅ PWA: manifest + service worker cache-first
+- ✅ Contrato AI Closet via backend/proxy (`js/ai-closet-gateway.js`), sin claves IA en frontend
 - ✅ **Consola de marca** (`console.html`): identidad, tema, recompensa, carrito,
   retención, catálogo de campaña activable, vista previa en vivo, export/import JSON
   y **QR de handoff de campaña** (lado emisor de Fase 2, listo para que
@@ -55,6 +56,7 @@ js/store.js           estado + localStorage (sesión anónima por dispositivo)
 js/avatar.js          avatar nivel 1 paramétrico (SVG)
 js/analytics.js       funnel: seleccion → qr → sesion → look → carrito
 js/qr-handoff.js      schema mirrora-handoff/v0.1 (in & out)
+js/ai-closet-gateway.js cliente seguro hacia /api/ai-closet
 js/data/brand.js      contrato de consola de marca (white-label)
 js/data/catalog.js    catálogo piloto + complementos (SVG inline)
 js/lib/qrcode.js      vendored, MIT
@@ -67,3 +69,4 @@ sw.js                 service worker cache-first
 2. El QR/handoff nunca transporta datos personales ni faciales.
 3. No se promete talla ni ajuste físico; el avatar es una interpretación editorial.
 4. Componentes de producción sin Babel/Tailwind/React desde CDN.
+5. AI Closet se consume mediante backend/proxy; nunca con claves de proveedor en cliente.
