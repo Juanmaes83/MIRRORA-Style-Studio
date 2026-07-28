@@ -18,6 +18,12 @@ const DEFAULTS = {
   selection: { slots: {}, outfitId: null },
   wishlist: [],             // product ids
   looks: [],                // { id, name, avatar, productId, comboIds, createdAt }
+  aiCloset: {
+    activeItemId: "closet-coat-01",
+    filter: "all",
+    canvasItems: [],
+    savedAt: null
+  },
   events: []                // funnel local (espejo de analytics)
 };
 
@@ -28,6 +34,7 @@ function load() {
       const data = JSON.parse(raw);
       const state = { ...structuredClone(DEFAULTS), ...data, avatar: { ...DEFAULTS.avatar, ...data.avatar } };
       if (!state.selection || !state.selection.slots) state.selection = { slots: {}, outfitId: null };
+      state.aiCloset = { ...DEFAULTS.aiCloset, ...data.aiCloset };
       return state;
     }
   } catch { /* estado corrupto → empezar limpio */ }
@@ -104,5 +111,53 @@ export function saveLook(name) {
 
 export function deleteLook(lookId) {
   state.looks = state.looks.filter(l => l.id !== lookId);
+  save();
+}
+
+export function setClosetFilter(filter) {
+  state.aiCloset.filter = filter;
+  save();
+}
+
+export function setActiveClosetItem(itemId) {
+  state.aiCloset.activeItemId = itemId;
+  save();
+}
+
+export function addClosetItemToCanvas(itemId, placement = {}) {
+  const existing = state.aiCloset.canvasItems.find(item => item.itemId === itemId);
+  if (existing) {
+    state.aiCloset.activeItemId = itemId;
+    save();
+    return existing;
+  }
+  const canvasItem = {
+    itemId,
+    x: placement.x ?? 50,
+    y: placement.y ?? 50,
+    scale: placement.scale ?? 1,
+    rotation: 0,
+    zIndex: placement.zIndex ?? state.aiCloset.canvasItems.length + 1
+  };
+  state.aiCloset.canvasItems.push(canvasItem);
+  state.aiCloset.activeItemId = itemId;
+  save();
+  return canvasItem;
+}
+
+export function updateClosetCanvasItem(itemId, changes) {
+  const item = state.aiCloset.canvasItems.find(entry => entry.itemId === itemId);
+  if (!item) return;
+  Object.assign(item, changes);
+  save();
+}
+
+export function removeClosetCanvasItem(itemId) {
+  state.aiCloset.canvasItems = state.aiCloset.canvasItems.filter(item => item.itemId !== itemId);
+  save();
+}
+
+export function saveClosetCanvas() {
+  state.aiCloset.savedAt = new Date().toISOString();
   save();
 }

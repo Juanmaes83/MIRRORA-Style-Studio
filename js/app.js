@@ -7,7 +7,7 @@
 // paramétrico solo se usa en el catálogo demo (bolsos SVG), nunca para simular
 // que una prenda real está puesta.
 
-import { state, save, subscribe, toggleWishlist, setSlot, removeSlot, loadComposition, clearSelection, selectedIds, saveLook, deleteLook } from "./store.js";
+import { state, save, subscribe, toggleWishlist, setSlot, removeSlot, loadComposition, clearSelection, selectedIds, saveLook, deleteLook, addClosetItemToCanvas, removeClosetCanvasItem, saveClosetCanvas, setActiveClosetItem, setClosetFilter, updateClosetCanvasItem } from "./store.js";
 import { PRODUCTS, COMBOS, OUTFITS, CATALOG_META, findItem, productArt, productSVG, comboSVG, initCatalog, slotOf, slotLabel, SLOT_ORDER } from "./data/catalog.js";
 import { AVATAR_OPTIONS, avatarSVG } from "./avatar.js";
 import { BRAND, formatPrice } from "./data/brand.js";
@@ -17,6 +17,7 @@ import { buildHandoffURL, renderQR, readIncomingHandoff } from "./qr-handoff.js"
 const $ = sel => document.querySelector(sel);
 const $$ = sel => [...document.querySelectorAll(sel)];
 const external = () => CATALOG_META.source === "external";
+let localMannequinUrl = null;
 
 /* ================= Navegación ================= */
 
@@ -25,6 +26,7 @@ function goto(view) {
   $$(".navlink").forEach(b => b.classList.toggle("is-active", b.dataset.nav === view));
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (view === "catalog") renderCatalog();
+  if (view === "closet") renderCloset();
   if (view === "studio") renderStudio();
   if (view === "looks") renderLooks();
   if (view === "wishlist") renderWishlist();
@@ -463,6 +465,68 @@ $("#qr-modal-close").addEventListener("click", () => { $("#qr-modal").hidden = t
 $("#qr-modal").addEventListener("click", e => { if (e.target.id === "qr-modal") e.target.hidden = true; });
 
 /* ================= Badges / sesión / tema ================= */
+
+const PLACEMENT_PRESETS = {
+  upperbody: { x: 50, y: 36, scale: 0.92, zIndex: 30, width: 42 },
+  wholebody_up: { x: 50, y: 42, scale: 1.06, zIndex: 40, width: 48 },
+  lowerbody: { x: 50, y: 64, scale: 0.94, zIndex: 20, width: 36 },
+  shoes: { x: 50, y: 85, scale: 0.72, zIndex: 50, width: 42 },
+  accessories_up: { x: 62, y: 43, scale: 0.42, zIndex: 60, width: 20 },
+};
+
+function placementFor(item) {
+  return PLACEMENT_PRESETS[item.part] || { x: 50, y: 50, scale: 0.7, zIndex: 35, width: 30 };
+}
+
+function renderCloset() {
+  const closet = state.aiCloset;
+  const filters = [["all", "Todo"], ...[...new Set(PRODUCTS.map(item => item.category))].map(category => [category, PRODUCTS.find(item => item.category === category)?.line || category])];
+  const visible = closet.filter === "all" ? PRODUCTS : PRODUCTS.filter(item => item.category === closet.filter);
+  $("#closet-filters").innerHTML = `<div class="closet-filter-list">${filters.map(([id, label]) => `<button class="chip ${closet.filter === id ? "is-on" : ""}" data-closet-filter="${id}">${label}</button>`).join("")}</div>`;
+  $("#closet-grid").innerHTML = visible.map(item => `<button class="closet-card ${closet.activeItemId === item.id ? "is-active" : ""}" data-closet-item="${item.id}"><span class="closet-art"><img src="${item.image}" alt="" /></span><span><strong>${item.name}</strong><small>${item.material || item.category} / activo</small></span></button>`).join("");
+  const active = findItem(closet.activeItemId) || PRODUCTS[0];
+  const onCanvas = closet.canvasItems.some(entry => entry.itemId === active.id);
+  const transform = closet.canvasItems.find(entry => entry.itemId === active.id);
+  const transformControls = transform ? `<div class="transform-controls"><span>Transformar prenda</span><output>Escala ${Math.round(transform.scale * 100)}% / giro ${transform.rotation}deg / capa ${transform.zIndex}</output><div><button data-transform="scale-down">- Tamano</button><button data-transform="scale-up">+ Tamano</button></div><div><button data-transform="rotate-left">Girar izq.</button><button data-transform="rotate-right">Girar der.</button></div><div><button data-transform="back">Enviar atras</button><button data-transform="front">Traer delante</button></div><button class="danger-link" data-transform="remove">Quitar del lienzo</button></div>` : "";
+  $("#closet-detail").innerHTML = `<p class="detail-kicker">Catalogo real / ${active.line}</p><div class="detail-art"><img src="${active.image}" alt="${active.name}" /></div><h3>${active.name}</h3><p>${active.category} / ${active.material || "sin material"}</p><span class="detail-status">Asset aprobado</span><button class="btn btn-primary btn-block" data-canvas-add="${active.id}">${onCanvas ? "En el lienzo" : "Anadir al lienzo"}</button>${transformControls}<p class="detail-note">Imagen real de catalogo. El procesamiento IA se conectara mediante el bridge, nunca desde el navegador.</p>`;
+  const items = closet.canvasItems.filter(entry => findItem(entry.itemId));
+  if (items.length !== closet.canvasItems.length) {
+    closet.canvasItems = items;
+    save();
+  }
+  $("#canvas-count").textContent = `${items.length} ${items.length === 1 ? "prenda" : "prendas"}`;
+  const mannequin = localMannequinUrl ? `<img class="canvas-mannequin" src="${localMannequinUrl}" alt="Foto local usada como referencia de composicion" />` : `<div class="canvas-mannequin canvas-mannequin-placeholder" aria-hidden="true"></div>`;
+  $("#closet-canvas").innerHTML = `${mannequin}<div class="body-guides" aria-hidden="true"><i class="guide-shoulders"></i><i class="guide-waist"></i><i class="guide-hips"></i><i class="guide-feet"></i></div>${items.length ? items.map(entry => { const item = findItem(entry.itemId); const preset = placementFor(item); return `<button class="canvas-garment ${closet.activeItemId === entry.itemId ? "is-selected" : ""}" data-canvas-item="${entry.itemId}" style="--garment-width:${preset.width}%;left:${entry.x}%;top:${entry.y}%;z-index:${entry.zIndex};transform:translate(-50%,-50%) rotate(${entry.rotation}deg) scale(${entry.scale})"><img src="${item.image}" alt="${item.name}" /><span class="canvas-handle" aria-hidden="true"></span></button>`; }).join("") : `<div class="canvas-empty"><span>Selecciona una prenda del armario</span><small>Tu composicion aparecera aqui</small></div>`}`;
+  $$("[data-canvas-item]").forEach(node => node.addEventListener("pointerdown", event => {
+    const itemId = node.dataset.canvasItem; setActiveClosetItem(itemId); node.setPointerCapture(event.pointerId); const canvas = $("#closet-canvas");
+    const move = next => { const box = canvas.getBoundingClientRect(); const x = Math.max(8, Math.min(92, ((next.clientX - box.left) / box.width) * 100)); const y = Math.max(8, Math.min(92, ((next.clientY - box.top) / box.height) * 100)); updateClosetCanvasItem(itemId, { x, y }); node.style.left = `${x}%`; node.style.top = `${y}%`; };
+    node.addEventListener("pointermove", move); node.addEventListener("pointerup", () => { node.removeEventListener("pointermove", move); renderCloset(); }, { once: true });
+  }));
+}
+
+document.addEventListener("click", event => {
+  const filter = event.target.closest("[data-closet-filter]"); if (filter) { setClosetFilter(filter.dataset.closetFilter); renderCloset(); return; }
+  const item = event.target.closest("[data-closet-item]"); if (item) { setActiveClosetItem(item.dataset.closetItem); renderCloset(); return; }
+  const add = event.target.closest("[data-canvas-add]"); if (add) { const product = findItem(add.dataset.canvasAdd); addClosetItemToCanvas(product.id, placementFor(product)); renderCloset(); }
+  const transform = event.target.closest("[data-transform]");
+  if (transform) {
+    const entry = state.aiCloset.canvasItems.find(item => item.itemId === state.aiCloset.activeItemId);
+    if (!entry) return;
+    const action = transform.dataset.transform;
+    if (action === "remove") removeClosetCanvasItem(entry.itemId);
+    else if (action === "scale-up") updateClosetCanvasItem(entry.itemId, { scale: Math.min(2.4, +(entry.scale + 0.1).toFixed(2)) });
+    else if (action === "scale-down") updateClosetCanvasItem(entry.itemId, { scale: Math.max(0.35, +(entry.scale - 0.1).toFixed(2)) });
+    else if (action === "rotate-left") updateClosetCanvasItem(entry.itemId, { rotation: entry.rotation - 10 });
+    else if (action === "rotate-right") updateClosetCanvasItem(entry.itemId, { rotation: entry.rotation + 10 });
+    else if (action === "front") updateClosetCanvasItem(entry.itemId, { zIndex: Math.max(...state.aiCloset.canvasItems.map(item => item.zIndex)) + 1 });
+    else if (action === "back") updateClosetCanvasItem(entry.itemId, { zIndex: Math.min(...state.aiCloset.canvasItems.map(item => item.zIndex)) - 1 });
+    renderCloset();
+  }
+});
+
+$("#closet-save").addEventListener("click", () => { saveClosetCanvas(); toast("Composicion guardada en este dispositivo"); });
+$("#mannequin-input").addEventListener("change", event => { const file = event.target.files?.[0]; if (!file) return; if (localMannequinUrl) URL.revokeObjectURL(localMannequinUrl); localMannequinUrl = URL.createObjectURL(file); $("#mannequin-remove").hidden = false; renderCloset(); });
+$("#mannequin-remove").addEventListener("click", () => { if (localMannequinUrl) URL.revokeObjectURL(localMannequinUrl); localMannequinUrl = null; $("#mannequin-input").value = ""; $("#mannequin-remove").hidden = true; renderCloset(); });
 
 function renderBadges() {
   const bl = $("#badge-looks"), bw = $("#badge-wishlist");

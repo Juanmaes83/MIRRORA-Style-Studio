@@ -21,6 +21,7 @@
       <nav class="mainnav" aria-label="Secciones">
         <button class="navlink is-active" data-nav="home">Inicio</button>
         <button class="navlink" data-nav="catalog">Colección</button>
+        <button class="navlink" data-nav="closet">Armario</button>
         <button class="navlink" data-nav="studio">Estudio</button>
         <button class="navlink" data-nav="looks">Looks <span class="badge" id="badge-looks" hidden></span></button>
         <button class="navlink" data-nav="wishlist">Wishlist <span class="badge" id="badge-wishlist" hidden></span></button>
@@ -67,6 +68,11 @@
     </section>
 
     <!-- ============ STUDIO ============ -->
+    <section class="view" data-view="closet">
+      <div class="closet-head"><div><p class="hero-eyebrow">AI Closet / prototipo local</p><h2>Tu armario, en composicion.</h2><p>Selecciona prendas, revisa su ficha y construye un look sobre un lienzo editorial.</p></div><button class="btn btn-primary" id="closet-save">Guardar composicion</button></div>
+      <div class="closet-shell"><aside class="closet-rail"><div id="closet-filters"></div><div id="closet-grid" class="closet-grid"></div></aside><section class="closet-canvas-panel"><div class="canvas-topline"><span>LIENZO</span><span id="canvas-count">0 prendas</span></div><div class="mannequin-upload"><label for="mannequin-input">Usar foto de cuerpo entero como maniqui</label><input id="mannequin-input" type="file" accept="image/png,image/jpeg,image/webp" /><button id="mannequin-remove" type="button" hidden>Quitar foto</button><small>La foto se mantiene solo en este navegador y no activa try-on.</small></div><div id="closet-canvas" class="closet-canvas" aria-label="Lienzo de look"></div><p class="canvas-note">Arrastra las prendas y usa los controles de transformacion. Composicion editorial, no try-on.</p></section><aside id="closet-detail" class="closet-detail"></aside></div>
+    </section>
+
     <section class="view" data-view="studio">
       <div class="studio-layout">
 
