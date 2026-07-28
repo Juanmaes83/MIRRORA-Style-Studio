@@ -153,10 +153,40 @@ MIRRORA_AI_ASSET_PROVIDER=openai
 ```
 
 `simulated` es el valor por defecto y mantiene el entorno sin coste ni llamadas externas.
-`openai` esta declarado como adaptador, pero devuelve `provider_not_enabled` aunque exista
-`OPENAI_API_KEY`; no se activara hasta la aprobacion explicita de Fase 5B. Si falta la
-clave, devuelve `provider_not_configured`. Esto permite configurar y probar el camino de
-errores sin exponer secretos ni activar gasto.
+`openai` activa la categorizacion real en backend con Responses API si existe
+`OPENAI_API_KEY`. Si falta la clave, devuelve `provider_not_configured`. La eliminacion
+de fondo real sigue bloqueada en 5B con `provider_not_enabled`: esta fase solo cubre
+categorizacion y enriquecimiento de metadata.
 
-Fase 5A no cierra la Fase 5 completa: faltan proveedor real, persistencia y la validacion
-explicita de calidad visual, latencia y coste.
+## Fase 5B: categorizacion OpenAI por adaptador
+
+`mirrora-ai-bridge/providers/asset-adapters.mjs` contiene el adaptador OpenAI. El bridge
+convierte el fixture autorizado a `data:image/*;base64`, llama a
+`https://api.openai.com/v1/responses` desde servidor y solicita JSON estructurado con:
+
+```json
+{
+  "category": "tops",
+  "garmentType": "shirt",
+  "material": "poplin",
+  "color": "white",
+  "confidence": 0.9
+}
+```
+
+La respuesta se normaliza al schema interno `mirrora-garment-metadata/v0.1` e incluye
+`provider`, `model`, `durationMs`, `simulated: false` y el `assetId` original. Los tests
+mockean OpenAI para no consumir credito en CI y comprueban que la imagen se manda como
+`input_image`, que la clave solo viaja en servidor y que `remove-background` no queda
+activado accidentalmente.
+
+Variables necesarias para validacion real en Railway staging:
+
+```text
+MIRRORA_AI_ASSET_PROVIDER=openai
+OPENAI_API_KEY=<secreto en Railway>
+OPENAI_MODEL=gpt-5-mini
+```
+
+Fase 5B queda implementada tecnicamente, pero no cerrada operativamente hasta ejecutar
+una llamada real con fixture autorizado y documentar calidad visual, latencia y coste.

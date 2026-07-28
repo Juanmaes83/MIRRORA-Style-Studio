@@ -41,11 +41,12 @@ export function createProcessingService({ adapter = createSimulatedAdapter(), au
   }
 
   async function run(job, fixture) {
+    const started = now();
     try {
       const result = await adapter.process({ operation: job.operation, assetId: job.assetId, fixture });
-      Object.assign(job, { status: "completed", simulated: result.simulated === true, result, completedAt: new Date(now()).toISOString() });
+      Object.assign(job, { status: "completed", provider: result.provider || "simulated", simulated: result.simulated === true, durationMs: now() - started, result, completedAt: new Date(now()).toISOString() });
     } catch (caught) {
-      Object.assign(job, { status: "failed", error: { code: caught.code || "provider_failed", message: caught.message } });
+      Object.assign(job, { status: "failed", durationMs: now() - started, error: { code: caught.code || "provider_failed", message: caught.message } });
     }
     return job;
   }
@@ -53,9 +54,9 @@ export function createProcessingService({ adapter = createSimulatedAdapter(), au
   return { start, retry, get, purge };
 }
 
-export function createProcessingServiceFromEnv({ env = process.env, now = () => Date.now() } = {}) {
+export function createProcessingServiceFromEnv({ env = process.env, now = () => Date.now(), fetchImpl = globalThis.fetch } = {}) {
   return createProcessingService({
-    adapter: createAssetAdapter({ provider: readAssetProvider(env), env }),
+    adapter: createAssetAdapter({ provider: readAssetProvider(env), env, fetchImpl }),
     now,
   });
 }

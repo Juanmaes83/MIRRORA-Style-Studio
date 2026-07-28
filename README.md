@@ -42,16 +42,20 @@ responde correctamente a `/api/ai-closet/closet?campaign=vercel-preview` con sch
 `ai-closet-closet-response/v0.1` e `items: []`. No hay proveedor IA, clave de proveedor,
 foto personal, R2 ni Supabase conectados en este entorno.
 
-**Fase 5A - contrato y proveedor apagado: iniciada.** El bridge incluye un fixture real
+**Fase 5A - contrato y proveedor apagado: completada.** El bridge incluye un fixture real
 autorizado, un selector server-side de proveedor (`MIRRORA_AI_ASSET_PROVIDER`) y un
 adaptador simulado con categorizacion, resultado de fondo transparente, estado,
-reintento y borrado. El valor por defecto sigue siendo `simulated`. El adaptador
-`openai` esta declarado pero devuelve error controlado hasta aprobacion explicita de
-Fase 5B. No existe una llamada externa, persistencia ni validacion de calidad, latencia
-o coste.
+reintento y borrado. El valor por defecto sigue siendo `simulated`.
 
-**Siguiente hito:** Fase 5B, conectar categorizacion real con proveedor por adaptador y
-comparar calidad visual, latencia y coste antes de persistir resultados.
+**Fase 5B - categorizacion OpenAI por adaptador: implementada en codigo; pendiente de
+validacion real en staging.** El adaptador `openai` usa Responses API desde backend,
+lee solo fixtures autorizados y normaliza metadata a `mirrora-garment-metadata/v0.1`.
+Los tests usan mock, por tanto no consumen credito ni requieren red. Falta configurar
+`OPENAI_API_KEY` y `MIRRORA_AI_ASSET_PROVIDER=openai` en Railway staging para medir
+calidad visual, latencia y coste con 1-2 prendas autorizadas.
+
+**Siguiente hito:** validar Fase 5B con una llamada real controlada y decidir despues si
+activar eliminacion de fondo real o mantenerla simulada hasta seleccionar proveedor.
 
 PWA de consumidor: motor de decisión y conversión para moda.
 
