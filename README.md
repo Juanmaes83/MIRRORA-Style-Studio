@@ -2,9 +2,13 @@
 
 ## Estado de entrega
 
-**Fase 2R - Armario Real y Canvas Local: completada.**
+**Fase 2 - Diseno visual navegable: completada.**
 
 - El armario consume las imagenes reales de `catalog/catalog.json`; no usa prendas SVG.
+- El panel de detalle, el armario y los assets de catalogo real estan disponibles.
+
+**Fase 3 - Canvas funcional local: completada.**
+
 - El canvas permite foto local de cuerpo entero como referencia, mover, escalar, girar,
   ordenar capas, eliminar y guardar una composicion local.
 - La foto de referencia no se sube ni se persiste fuera del navegador y no es try-on.
@@ -18,7 +22,7 @@
   subida de archivos, almacenamiento, Cloud/R2 ni CORS de bucket en esta fase.
 - Ejecutar localmente con `MIRRORA_AI_BRIDGE_TOKEN=<token> npm run start:bridge`.
 
-**Fase 4B - preview same-origin: completada.** El servidor local entrega la PWA y
+**Fase 4B - preview same-origin: completada localmente; pendiente de validar en Vercel.** El servidor local entrega la PWA y
 encamina exclusivamente `/api/ai-closet` al bridge. El navegador no recibe el token;
 el proxy loopback lo inyecta en servidor. Ejecutar con
 `MIRRORA_AI_BRIDGE_TOKEN=<token> PORT=4181 npm run start:preview`.
@@ -28,19 +32,20 @@ el proxy loopback lo inyecta en servidor. Ejecutar con
 las rutas relativas al bridge. Sus dos variables server-side son
 `MIRRORA_AI_BRIDGE_ORIGIN` y `MIRRORA_AI_BRIDGE_TOKEN`; ninguna se expone al navegador.
 
-**Fase 4 - gateway seguro: completada y desplegada en staging.** El bridge esta activo
-en `https://mirrora-style-studio-staging.up.railway.app`; el healthcheck confirmado
-devuelve `status: "ok"` y `providers: "simulated"`. No hay proveedor IA, clave de
-proveedor, foto personal, R2 ni Supabase conectados en este entorno. El proximo paso de
-infraestructura es conectar la Function de Vercel como proxy same-origin.
+**Estado operativo de Fase 4:** 4A esta desplegada en Railway staging; 4B dispone del
+proxy implementado y probado, pero sigue pendiente su configuracion y verificacion en
+Vercel. El bridge activo en `https://mirrora-style-studio-staging.up.railway.app`
+confirma `status: "ok"` y `providers: "simulated"`. No hay proveedor IA, clave de
+proveedor, foto personal, R2 ni Supabase conectados en este entorno.
 
-**Fase 5A - procesado controlado: en curso.** El bridge procesa exclusivamente un
-fixture real autorizado del catalogo con un adaptador simulado: categorizacion, resultado
-con fondo transparente, estado, reintento y borrado. No existe aun una llamada externa.
+**Preparacion tecnica de Fase 5: disponible, pero Fase 5 aun no iniciada.** El bridge
+incluye un fixture real autorizado y un adaptador simulado con categorizacion, resultado
+de fondo transparente, estado, reintento y borrado. No existe una llamada externa,
+persistencia ni validacion de calidad, latencia o coste.
 
-**Siguiente validacion:** conectar un proveedor de servidor a este adaptador y comparar
-calidad visual, latencia y coste antes de persistir resultados. El almacenamiento y
-try-on solo se habilitaran despues de esa validacion.
+**Siguiente hito:** terminar y validar Fase 4B en Vercel. Solo despues empezara la
+Fase 5 real, conectando un proveedor por adaptador y comparando calidad visual,
+latencia y coste antes de persistir resultados.
 
 PWA de consumidor: motor de decisión y conversión para moda.
 

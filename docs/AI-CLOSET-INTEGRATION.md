@@ -100,9 +100,9 @@ adaptadores auditables y almacenamiento temporal con TTL, purge y auditoria.
 `preview-server.mjs` sirve los archivos de la PWA y reenvia solo `/api/ai-closet/*` al
 bridge en loopback. El token existe exclusivamente como variable de entorno del proceso
 Node y se anade entre ambos servidores; no se serializa en HTML, JavaScript, localStorage
-ni respuestas. Esto es una herramienta de preview local, no el sistema de sesion de
-produccion: antes del despliegue se sustituira por autenticacion de usuario o sesion en el
-borde del backend.
+ni respuestas. Esta parte local esta completada. La Function de Vercel esta implementada
+y cubierta por pruebas, pero la configuracion de sus variables y la verificacion en un
+preview Vercel siguen pendientes; 4B no se considera cerrada hasta entonces.
 
 ### Staging en Railway y Vercel
 
@@ -128,7 +128,7 @@ Las variables presentes en Railway son solo `NODE_ENV=staging` y
 para verificacion y para el proximo proxy de Vercel; el navegador no debe enviar ese
 token ni llamar proveedores directamente.
 
-## Fase 5A: procesado controlado
+## Preparacion tecnica de Fase 5
 
 El bridge admite categorizacion y eliminacion de fondo solo para fixtures explicitamente
 autorizados en `processing.mjs`. Cada job conserva estado, resultado, numero de intentos
@@ -136,3 +136,5 @@ y puede borrarse. El adaptador inicial es simulado: sirve para validar el contra
 flujo sin enviar imagenes a terceros. La integracion con OpenAI puede analizar una imagen
 por URL o fichero mediante Responses, pero requerira un adaptador server-side, una clave
 de entorno, URLs temporales y una aprobacion de coste y retencion antes de activarse.
+Esto no constituye el inicio de la Fase 5 real: faltan proveedor, persistencia y la
+validacion explicita de calidad visual, latencia y coste.
