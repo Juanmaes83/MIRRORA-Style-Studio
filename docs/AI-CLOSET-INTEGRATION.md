@@ -9,7 +9,7 @@ Fashion-Studio-SOL/packages/ai-closet-engine
 -> catalogo, looks y prendas reales
 -> MIRRORA PWA
 -> /api/ai-closet
--> mirrora-tryon-gateway
+-> mirrora-ai-bridge
 -> proveedor IA licenciado
 ```
 
@@ -77,3 +77,20 @@ El payload de try-on debe incluir consentimiento y asset temporal:
 - El frontend no contiene claves de proveedores.
 - Un look y sus prendas se validan antes de solicitar try-on; el gateway vuelve a
   comprobar pertenencia, consentimiento y caducidad.
+
+## Fase 3A: bridge sin proveedores
+
+`mirrora-ai-bridge/server.mjs` es el servicio aislado inicial. Implementa `GET /health`
+y las rutas `/api/ai-closet` con token `Bearer`, validacion versionada, idempotencia,
+limite por cliente y jobs simulados en memoria. No acepta ni persiste archivos; por tanto
+no requiere bucket, signed URLs ni CORS de R2.
+
+Para ejecutarlo localmente:
+
+```bash
+MIRRORA_AI_BRIDGE_TOKEN=un-token-local npm run start:bridge
+```
+
+La PWA seguira usando la misma ruta relativa `/api/ai-closet` cuando un proxy de entorno
+encamine esas peticiones al servicio. Antes de conectar cualquier proveedor se anadiran
+adaptadores auditables y almacenamiento temporal con TTL, purge y auditoria.
