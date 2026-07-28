@@ -16,7 +16,7 @@ jobs:
           node-version: "20"
       - name: Módulos ES sintácticamente válidos
         run: |
-          for f in js/app.js js/store.js js/data/catalog.js js/data/brand.js js/avatar.js js/analytics.js js/qr-handoff.js js/console.js; do
+          for f in js/app.js js/store.js js/data/catalog.js js/data/brand.js js/avatar.js js/analytics.js js/qr-handoff.js js/console.js js/ai-closet-gateway.js; do
             echo "check $f" && node --check "$f"
           done
       - name: El catálogo consumido es coherente (schema, refs, solo publicables)
