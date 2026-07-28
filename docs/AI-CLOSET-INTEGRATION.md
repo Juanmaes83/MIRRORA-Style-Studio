@@ -113,6 +113,21 @@ bridge desde sus variables server-side y elimina cualquier `Authorization` del b
 No usar una reescritura estatica para esta responsabilidad, ya que no puede inyectar el
 secreto.
 
+### Evidencia de staging
+
+El bridge de staging se ha desplegado en Railway con la rama
+`feature/mirrora-ai-bridge`, `npm run start:bridge` y healthcheck `/health`.
+
+```text
+GET https://mirrora-style-studio-staging.up.railway.app/health
+-> { "schema": "mirrora-ai-bridge-health/v0.1", "status": "ok", "providers": "simulated" }
+```
+
+Las variables presentes en Railway son solo `NODE_ENV=staging` y
+`MIRRORA_AI_BRIDGE_TOKEN` (no se documenta su valor). El dominio se usa unicamente
+para verificacion y para el proximo proxy de Vercel; el navegador no debe enviar ese
+token ni llamar proveedores directamente.
+
 ## Fase 5A: procesado controlado
 
 El bridge admite categorizacion y eliminacion de fondo solo para fixtures explicitamente

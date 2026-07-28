@@ -28,6 +28,12 @@ el proxy loopback lo inyecta en servidor. Ejecutar con
 las rutas relativas al bridge. Sus dos variables server-side son
 `MIRRORA_AI_BRIDGE_ORIGIN` y `MIRRORA_AI_BRIDGE_TOKEN`; ninguna se expone al navegador.
 
+**Fase 4 - gateway seguro: completada y desplegada en staging.** El bridge esta activo
+en `https://mirrora-style-studio-staging.up.railway.app`; el healthcheck confirmado
+devuelve `status: "ok"` y `providers: "simulated"`. No hay proveedor IA, clave de
+proveedor, foto personal, R2 ni Supabase conectados en este entorno. El proximo paso de
+infraestructura es conectar la Function de Vercel como proxy same-origin.
+
 **Fase 5A - procesado controlado: en curso.** El bridge procesa exclusivamente un
 fixture real autorizado del catalogo con un adaptador simulado: categorizacion, resultado
 con fondo transparente, estado, reintento y borrado. No existe aun una llamada externa.
