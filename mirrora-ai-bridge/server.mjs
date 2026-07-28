@@ -2,12 +2,13 @@ import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
+import { createProcessingService } from "./processing.mjs";
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" };
 const ASSET_SCHEMA = "ai-closet-asset-request/v0.1";
 const TRY_ON_SCHEMA = "mirrora-tryon-request/v0.1";
 
-export function createBridge({ token, now = () => Date.now(), requestLimit = 30, windowMs = 60_000 } = {}) {
+export function createBridge({ token, now = () => Date.now(), requestLimit = 30, windowMs = 60_000, processing = createProcessingService({ now }) } = {}) {
   if (!token) throw new Error("MIRRORA_AI_BRIDGE_TOKEN requerido");
 
   const requests = new Map();
@@ -39,8 +40,17 @@ export function createBridge({ token, now = () => Date.now(), requestLimit = 30,
         const body = await readJson(request);
         assertAssetRequest(body);
         const operation = url.pathname.endsWith("categorize") ? "categorize" : "remove-background";
-        return send(202, idempotentJob({ request, idempotency, operation, assetId: body.assetId, now }));
+        const key = request.headers["idempotency-key"];
+        if (key && idempotency.has(key)) return send(202, idempotency.get(key));
+        const job = await processing.start(operation, body.assetId);
+        if (key) idempotency.set(key, job);
+        return send(202, job);
       }
+
+      const processingMatch = url.pathname.match(/^\/api\/ai-closet\/processing\/([^/]+)(?:\/(retry))?$/);
+      if (processingMatch && request.method === "GET") return send(200, processing.get(processingMatch[1]));
+      if (processingMatch && processingMatch[2] === "retry" && request.method === "POST") return send(202, await processing.retry(processingMatch[1]));
+      if (processingMatch && request.method === "DELETE") return send(200, processing.purge(processingMatch[1]));
 
       if (request.method === "POST" && url.pathname === "/api/ai-closet/try-on") {
         const body = await readJson(request);

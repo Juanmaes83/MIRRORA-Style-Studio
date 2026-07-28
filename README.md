@@ -23,9 +23,13 @@ encamina exclusivamente `/api/ai-closet` al bridge. El navegador no recibe el to
 el proxy loopback lo inyecta en servidor. Ejecutar con
 `MIRRORA_AI_BRIDGE_TOKEN=<token> PORT=4181 npm run start:preview`.
 
-**Siguiente fase (5):** categorizacion y eliminacion de fondo mediante adaptador,
-primero con imagenes autorizadas. La conexion con proveedores, almacenamiento y try-on
-solo se habilitara tras validar su calidad visual, latencia, coste y retencion.
+**Fase 5A - procesado controlado: en curso.** El bridge procesa exclusivamente un
+fixture real autorizado del catalogo con un adaptador simulado: categorizacion, resultado
+con fondo transparente, estado, reintento y borrado. No existe aun una llamada externa.
+
+**Siguiente validacion:** conectar un proveedor de servidor a este adaptador y comparar
+calidad visual, latencia y coste antes de persistir resultados. El almacenamiento y
+try-on solo se habilitaran despues de esa validacion.
 
 PWA de consumidor: motor de decisión y conversión para moda.
 

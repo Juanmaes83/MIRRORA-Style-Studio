@@ -103,3 +103,12 @@ Node y se anade entre ambos servidores; no se serializa en HTML, JavaScript, loc
 ni respuestas. Esto es una herramienta de preview local, no el sistema de sesion de
 produccion: antes del despliegue se sustituira por autenticacion de usuario o sesion en el
 borde del backend.
+
+## Fase 5A: procesado controlado
+
+El bridge admite categorizacion y eliminacion de fondo solo para fixtures explicitamente
+autorizados en `processing.mjs`. Cada job conserva estado, resultado, numero de intentos
+y puede borrarse. El adaptador inicial es simulado: sirve para validar el contrato y el
+flujo sin enviar imagenes a terceros. La integracion con OpenAI puede analizar una imagen
+por URL o fichero mediante Responses, pero requerira un adaptador server-side, una clave
+de entorno, URLs temporales y una aprobacion de coste y retencion antes de activarse.

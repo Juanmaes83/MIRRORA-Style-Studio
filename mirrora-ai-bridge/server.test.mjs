@@ -12,7 +12,7 @@ async function withBridge(run, options = {}) {
 }
 
 const auth = { authorization: "Bearer test-token", "x-client-id": "test-client" };
-const asset = { schema: "ai-closet-asset-request/v0.1", assetId: "asset-1" };
+const asset = { schema: "ai-closet-asset-request/v0.1", assetId: "import-e3ea0305-1680-4ec7-85e0-1bbb7d58d827" };
 
 test("healthcheck is public and declares the simulated bridge", async () => {
   await withBridge(async base => {
@@ -25,12 +25,26 @@ test("healthcheck is public and declares the simulated bridge", async () => {
 test("bridge requires authentication and validates versioned asset requests", async () => {
   await withBridge(async base => {
     assert.equal((await fetch(`${base}/api/ai-closet/categorize`, { method: "POST" })).status, 401);
-    const invalid = await fetch(`${base}/api/ai-closet/categorize`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ assetId: "asset-1" }) });
+    const invalid = await fetch(`${base}/api/ai-closet/categorize`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ assetId: asset.assetId }) });
     assert.equal(invalid.status, 400);
     const valid = await fetch(`${base}/api/ai-closet/categorize`, { method: "POST", headers: { ...auth, "content-type": "application/json", "idempotency-key": "same-request" }, body: JSON.stringify(asset) });
     assert.equal(valid.status, 202);
     const repeated = await fetch(`${base}/api/ai-closet/categorize`, { method: "POST", headers: { ...auth, "content-type": "application/json", "idempotency-key": "same-request" }, body: JSON.stringify(asset) });
     assert.equal((await valid.json()).jobId, (await repeated.json()).jobId);
+  });
+});
+
+test("processing uses only the authorized fixture and supports result lookup and purge", async () => {
+  await withBridge(async base => {
+    const processed = await fetch(`${base}/api/ai-closet/remove-background`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify(asset) });
+    assert.equal(processed.status, 202);
+    const job = await processed.json();
+    assert.equal(job.status, "completed");
+    assert.equal(job.result.alphaPreserved, true);
+    assert.equal((await fetch(`${base}/api/ai-closet/processing/${job.jobId}`, { headers: auth })).status, 200);
+    assert.equal((await fetch(`${base}/api/ai-closet/processing/${job.jobId}`, { method: "DELETE", headers: auth })).status, 200);
+    const forbidden = await fetch(`${base}/api/ai-closet/categorize`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ ...asset, assetId: "not-authorized" }) });
+    assert.equal(forbidden.status, 403);
   });
 });
 
