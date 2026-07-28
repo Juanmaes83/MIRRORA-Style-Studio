@@ -22,30 +22,33 @@
   subida de archivos, almacenamiento, Cloud/R2 ni CORS de bucket en esta fase.
 - Ejecutar localmente con `MIRRORA_AI_BRIDGE_TOKEN=<token> npm run start:bridge`.
 
-**Fase 4B - preview same-origin: completada localmente; pendiente de validar en Vercel.** El servidor local entrega la PWA y
-encamina exclusivamente `/api/ai-closet` al bridge. El navegador no recibe el token;
-el proxy loopback lo inyecta en servidor. Ejecutar con
-`MIRRORA_AI_BRIDGE_TOKEN=<token> PORT=4181 npm run start:preview`.
+**Fase 4B - preview same-origin: completada y validada en Vercel.** El servidor local
+entrega la PWA y encamina exclusivamente `/api/ai-closet` al bridge. El navegador no
+recibe el token; el proxy loopback lo inyecta en servidor. En Vercel, la Function
+`api/ai-closet/[...path].mjs` hace el mismo trabajo server-side contra Railway.
+Ejecutar localmente con `MIRRORA_AI_BRIDGE_TOKEN=<token> PORT=4181 npm run start:preview`.
 
 **Despliegue staging:** Railway ejecuta el bridge en `0.0.0.0:$PORT` y verifica
 `/health`. Vercel entrega la PWA y su Function `api/ai-closet/[...path].mjs` reenvia
 las rutas relativas al bridge. Sus dos variables server-side son
 `MIRRORA_AI_BRIDGE_ORIGIN` y `MIRRORA_AI_BRIDGE_TOKEN`; ninguna se expone al navegador.
 
-**Estado operativo de Fase 4:** 4A esta desplegada en Railway staging; 4B dispone del
-proxy implementado y probado, pero sigue pendiente su configuracion y verificacion en
-Vercel. El bridge activo en `https://mirrora-style-studio-staging.up.railway.app`
-confirma `status: "ok"` y `providers: "simulated"`. No hay proveedor IA, clave de
-proveedor, foto personal, R2 ni Supabase conectados en este entorno.
+**Estado operativo de Fase 4:** 4A esta desplegada en Railway staging y 4B esta
+validada con preview same-origin en Vercel. El bridge activo en
+`https://mirrora-style-studio-staging.up.railway.app` confirma `status: "ok"` y
+`providers: "simulated"`. La preview de Vercel
+`https://mirrora-style-studio-git-featu-05e60a-juanma-espinosas-projects.vercel.app`
+responde correctamente a `/api/ai-closet/closet?campaign=vercel-preview` con schema
+`ai-closet-closet-response/v0.1` e `items: []`. No hay proveedor IA, clave de proveedor,
+foto personal, R2 ni Supabase conectados en este entorno.
 
 **Preparacion tecnica de Fase 5: disponible, pero Fase 5 aun no iniciada.** El bridge
 incluye un fixture real autorizado y un adaptador simulado con categorizacion, resultado
 de fondo transparente, estado, reintento y borrado. No existe una llamada externa,
 persistencia ni validacion de calidad, latencia o coste.
 
-**Siguiente hito:** terminar y validar Fase 4B en Vercel. Solo despues empezara la
-Fase 5 real, conectando un proveedor por adaptador y comparando calidad visual,
-latencia y coste antes de persistir resultados.
+**Siguiente hito:** iniciar Fase 5 real, conectando un proveedor por adaptador y
+comparando calidad visual, latencia y coste antes de persistir resultados.
 
 PWA de consumidor: motor de decisión y conversión para moda.
 

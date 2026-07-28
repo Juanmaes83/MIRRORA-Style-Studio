@@ -100,9 +100,8 @@ adaptadores auditables y almacenamiento temporal con TTL, purge y auditoria.
 `preview-server.mjs` sirve los archivos de la PWA y reenvia solo `/api/ai-closet/*` al
 bridge en loopback. El token existe exclusivamente como variable de entorno del proceso
 Node y se anade entre ambos servidores; no se serializa en HTML, JavaScript, localStorage
-ni respuestas. Esta parte local esta completada. La Function de Vercel esta implementada
-y cubierta por pruebas, pero la configuracion de sus variables y la verificacion en un
-preview Vercel siguen pendientes; 4B no se considera cerrada hasta entonces.
+ni respuestas. La Function de Vercel esta implementada y validada en preview; 4B queda
+cerrada con evidencia de ruta same-origin.
 
 ### Staging en Railway y Vercel
 
@@ -127,6 +126,17 @@ Las variables presentes en Railway son solo `NODE_ENV=staging` y
 `MIRRORA_AI_BRIDGE_TOKEN` (no se documenta su valor). El dominio se usa unicamente
 para verificacion y para el proximo proxy de Vercel; el navegador no debe enviar ese
 token ni llamar proveedores directamente.
+
+La preview de Vercel usa la misma rama y expone solo la ruta relativa
+`/api/ai-closet`. La Function inyecta `MIRRORA_AI_BRIDGE_TOKEN` en servidor y reenvia al
+bridge configurado por `MIRRORA_AI_BRIDGE_ORIGIN`. El incidente de autenticacion por
+espacios accidentales al inicio del token quedo cubierto por el commit `8d21d56`, que
+normaliza espacios de borde en el proxy y en el bridge.
+
+```text
+GET https://mirrora-style-studio-git-featu-05e60a-juanma-espinosas-projects.vercel.app/api/ai-closet/closet?campaign=vercel-preview
+-> { "schema": "ai-closet-closet-response/v0.1", "campaignId": "vercel-preview", "items": [] }
+```
 
 ## Preparacion tecnica de Fase 5
 
