@@ -18,14 +18,14 @@
   subida de archivos, almacenamiento, Cloud/R2 ni CORS de bucket en esta fase.
 - Ejecutar localmente con `MIRRORA_AI_BRIDGE_TOKEN=<token> npm run start:bridge`.
 
-**Fase 4B - preview same-origin: en curso.** El servidor local entrega la PWA y
+**Fase 4B - preview same-origin: completada.** El servidor local entrega la PWA y
 encamina exclusivamente `/api/ai-closet` al bridge. El navegador no recibe el token;
 el proxy loopback lo inyecta en servidor. Ejecutar con
 `MIRRORA_AI_BRIDGE_TOKEN=<token> PORT=4181 npm run start:preview`.
 
-**Siguiente validacion:** contrato HTTP, limites y respuestas simuladas del bridge.
-La categorizacion, eliminacion de fondo y try-on solo se conectaran despues de esa
-validacion y de aprobar cada adaptador de proveedor.
+**Siguiente fase (5):** categorizacion y eliminacion de fondo mediante adaptador,
+primero con imagenes autorizadas. La conexion con proveedores, almacenamiento y try-on
+solo se habilitara tras validar su calidad visual, latencia, coste y retencion.
 
 PWA de consumidor: motor de decisión y conversión para moda.
 
