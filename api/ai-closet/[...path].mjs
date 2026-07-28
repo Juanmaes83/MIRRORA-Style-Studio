@@ -3,7 +3,8 @@ const FORWARDED_HEADERS = ["content-type", "idempotency-key", "x-client-id"];
 
 export function createAiClosetProxy({ bridgeOrigin, bridgeToken, fetchImpl = globalThis.fetch } = {}) {
   const origin = normalizeBridgeOrigin(bridgeOrigin);
-  if (!bridgeToken) throw new Error("MIRRORA_AI_BRIDGE_TOKEN requerido");
+  const token = normalizeSecret(bridgeToken);
+  if (!token) throw new Error("MIRRORA_AI_BRIDGE_TOKEN requerido");
   if (typeof fetchImpl !== "function") throw new Error("fetch requerido");
 
   return {
@@ -17,7 +18,7 @@ export function createAiClosetProxy({ bridgeOrigin, bridgeToken, fetchImpl = glo
         const value = request.headers.get(name);
         if (value) headers.set(name, value);
       }
-      headers.set("authorization", `Bearer ${bridgeToken}`);
+      headers.set("authorization", `Bearer ${token}`);
 
       const upstream = await fetchImpl(`${origin}${url.pathname}${url.search}`, {
         method: request.method,
@@ -39,6 +40,10 @@ function normalizeBridgeOrigin(value) {
   const url = new URL(value);
   if (url.protocol !== "https:" && url.hostname !== "localhost") throw new Error("El bridge debe usar HTTPS fuera de local");
   return url.origin;
+}
+
+function normalizeSecret(value) {
+  return typeof value === "string" ? value.trim() : "";
 }
 
 export default {

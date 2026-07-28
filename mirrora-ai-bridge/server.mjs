@@ -9,7 +9,8 @@ const ASSET_SCHEMA = "ai-closet-asset-request/v0.1";
 const TRY_ON_SCHEMA = "mirrora-tryon-request/v0.1";
 
 export function createBridge({ token, now = () => Date.now(), requestLimit = 30, windowMs = 60_000, processing = createProcessingService({ now }) } = {}) {
-  if (!token) throw new Error("MIRRORA_AI_BRIDGE_TOKEN requerido");
+  const bridgeToken = normalizeSecret(token);
+  if (!bridgeToken) throw new Error("MIRRORA_AI_BRIDGE_TOKEN requerido");
 
   const requests = new Map();
   const jobs = new Map();
@@ -25,7 +26,7 @@ export function createBridge({ token, now = () => Date.now(), requestLimit = 30,
     }
 
     if (!url.pathname.startsWith("/api/ai-closet")) return send(404, error("not_found", "Ruta no encontrada"));
-    if (request.headers.authorization !== `Bearer ${token}`) return send(401, error("unauthorized", "Token de bridge invalido"));
+    if (readBearerToken(request.headers.authorization) !== bridgeToken) return send(401, error("unauthorized", "Token de bridge invalido"));
 
     const clientKey = request.headers["x-client-id"] || "anonymous";
     const allowed = allowRequest(requests, clientKey, now(), requestLimit, windowMs);
@@ -81,6 +82,16 @@ export function createBridge({ token, now = () => Date.now(), requestLimit = 30,
 }
 
 function error(code, message) { return { schema: "mirrora-ai-bridge-error/v0.1", error: { code, message } }; }
+
+function normalizeSecret(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function readBearerToken(value) {
+  if (typeof value !== "string") return "";
+  const match = value.match(/^Bearer\s+(.+)$/i);
+  return match ? normalizeSecret(match[1]) : "";
+}
 
 function allowRequest(requests, clientKey, current, limit, windowMs) {
   const recent = (requests.get(clientKey) || []).filter(time => current - time < windowMs);

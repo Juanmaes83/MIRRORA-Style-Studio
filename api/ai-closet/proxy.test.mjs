@@ -25,6 +25,20 @@ test("Vercel proxy sends the bridge token server-side and preserves the relative
   assert.equal(response.headers.get("cache-control"), "no-store");
 });
 
+test("Vercel proxy trims accidental whitespace around the server token", async () => {
+  const calls = [];
+  const proxy = createAiClosetProxy({
+    bridgeOrigin: "https://bridge-staging.example",
+    bridgeToken: "  server-only-token  ",
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+      return Response.json({ ok: true });
+    },
+  });
+  await proxy.fetch(new Request("https://mirrora.example/api/ai-closet/closet"));
+  assert.equal(calls[0].options.headers.get("authorization"), "Bearer server-only-token");
+});
+
 test("Vercel proxy rejects methods and origins that are outside the bridge contract", async () => {
   const proxy = createAiClosetProxy({ bridgeOrigin: "https://bridge-staging.example", bridgeToken: "token", fetchImpl: async () => Response.json({}) });
   assert.equal((await proxy.fetch(new Request("https://mirrora.example/api/ai-closet/closet", { method: "PUT" }))).status, 405);

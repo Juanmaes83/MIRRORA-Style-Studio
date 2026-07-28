@@ -52,6 +52,15 @@ test("bridge requires authentication and validates versioned asset requests", as
   });
 });
 
+test("bridge ignores accidental whitespace around configured and received tokens", async () => {
+  await withBridge(async base => {
+    const response = await fetch(`${base}/api/ai-closet/closet`, {
+      headers: { authorization: "Bearer   test-token  ", "x-client-id": "whitespace-client" },
+    });
+    assert.equal(response.status, 200);
+  }, { token: "  test-token  " });
+});
+
 test("processing uses only the authorized fixture and supports result lookup and purge", async () => {
   await withBridge(async base => {
     const processed = await fetch(`${base}/api/ai-closet/remove-background`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify(asset) });
