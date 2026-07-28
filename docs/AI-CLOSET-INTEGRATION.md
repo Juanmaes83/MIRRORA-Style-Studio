@@ -78,7 +78,7 @@ El payload de try-on debe incluir consentimiento y asset temporal:
 - Un look y sus prendas se validan antes de solicitar try-on; el gateway vuelve a
   comprobar pertenencia, consentimiento y caducidad.
 
-## Fase 3A: bridge sin proveedores
+## Fase 4A: bridge sin proveedores
 
 `mirrora-ai-bridge/server.mjs` es el servicio aislado inicial. Implementa `GET /health`
 y las rutas `/api/ai-closet` con token `Bearer`, validacion versionada, idempotencia,
@@ -94,3 +94,12 @@ MIRRORA_AI_BRIDGE_TOKEN=un-token-local npm run start:bridge
 La PWA seguira usando la misma ruta relativa `/api/ai-closet` cuando un proxy de entorno
 encamine esas peticiones al servicio. Antes de conectar cualquier proveedor se anadiran
 adaptadores auditables y almacenamiento temporal con TTL, purge y auditoria.
+
+## Fase 4B: preview same-origin
+
+`preview-server.mjs` sirve los archivos de la PWA y reenvia solo `/api/ai-closet/*` al
+bridge en loopback. El token existe exclusivamente como variable de entorno del proceso
+Node y se anade entre ambos servidores; no se serializa en HTML, JavaScript, localStorage
+ni respuestas. Esto es una herramienta de preview local, no el sistema de sesion de
+produccion: antes del despliegue se sustituira por autenticacion de usuario o sesion en el
+borde del backend.

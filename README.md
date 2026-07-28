@@ -10,13 +10,18 @@
 - La foto de referencia no se sube ni se persiste fuera del navegador y no es try-on.
 - El gateway de IA sigue siendo un contrato seguro sin claves de proveedor en frontend.
 
-**Fase 3A - `mirrora-ai-bridge` seguro sin IA: en curso.**
+**Fase 4A - `mirrora-ai-bridge` seguro sin IA: completada.**
 
 - Servicio Node aislado con `healthcheck`, autenticacion por token de entorno,
   validacion de schemas, limite por ventana e idempotencia de peticiones.
 - Sus respuestas son simuladas y los jobs viven solo en memoria: no hay proveedor,
   subida de archivos, almacenamiento, Cloud/R2 ni CORS de bucket en esta fase.
 - Ejecutar localmente con `MIRRORA_AI_BRIDGE_TOKEN=<token> npm run start:bridge`.
+
+**Fase 4B - preview same-origin: en curso.** El servidor local entrega la PWA y
+encamina exclusivamente `/api/ai-closet` al bridge. El navegador no recibe el token;
+el proxy loopback lo inyecta en servidor. Ejecutar con
+`MIRRORA_AI_BRIDGE_TOKEN=<token> PORT=4181 npm run start:preview`.
 
 **Siguiente validacion:** contrato HTTP, limites y respuestas simuladas del bridge.
 La categorizacion, eliminacion de fondo y try-on solo se conectaran despues de esa

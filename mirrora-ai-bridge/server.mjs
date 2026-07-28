@@ -1,5 +1,7 @@
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
+import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" };
 const ASSET_SCHEMA = "ai-closet-asset-request/v0.1";
@@ -106,7 +108,7 @@ function idempotentJob({ request, idempotency, operation, assetId, now }) {
   return job;
 }
 
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT || 8787);
   createBridge({ token: process.env.MIRRORA_AI_BRIDGE_TOKEN }).listen(port, "127.0.0.1", () => {
     console.log(`mirrora-ai-bridge listening on http://127.0.0.1:${port}`);
