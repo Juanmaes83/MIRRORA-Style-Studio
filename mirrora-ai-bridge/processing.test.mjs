@@ -100,6 +100,8 @@ test("rembg background adapter calls only the isolated service for Fase 5C", asy
         processedAssetId: `${fixtureId}:transparent`,
         alphaPreserved: true,
         cropped: true,
+        imageDataUrl: "data:image/png;base64,ZmFrZS1wbmc=",
+        outputBytes: 8,
         durationMs: 88,
       }), { status: 200 });
     },
@@ -109,6 +111,8 @@ test("rembg background adapter calls only the isolated service for Fase 5C", asy
   assert.equal(result.simulated, false);
   assert.equal(result.processedAssetId, `${fixtureId}:transparent`);
   assert.equal(result.cropped, true);
+  assert.equal(result.imageDataUrl, "data:image/png;base64,ZmFrZS1wbmc=");
+  assert.equal(result.outputBytes, 8);
   assert.equal(calls[0].url, "https://rembg.internal/remove-background");
   assert.equal(calls[0].options.headers.authorization, "Bearer rembg-token");
   assert.equal(calls[0].body.schema, "mirrora-background-removal-request/v0.1");
@@ -135,6 +139,8 @@ test("background provider selection does not affect OpenAI categorization", asyn
         processedAssetId: `${fixtureId}:transparent`,
         alphaPreserved: true,
         cropped: true,
+        imageDataUrl: "data:image/png;base64,ZmFrZS1wbmc=",
+        outputBytes: 8,
         durationMs: 90,
       }), { status: 200 });
     },

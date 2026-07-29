@@ -108,6 +108,7 @@ export function normalizeRembgResult(payload, assetId) {
   if (!payload.alphaPreserved || !payload.cropped || typeof payload.processedAssetId !== "string") {
     throw problem("provider_bad_response", "rembg no devolvio un PNG transparente recortado valido", 502);
   }
+  const imageDataUrl = normalizePngDataUrl(payload.imageDataUrl);
   return {
     schema: "mirrora-background-removal-result/v0.1",
     provider: "rembg",
@@ -115,8 +116,10 @@ export function normalizeRembgResult(payload, assetId) {
     simulated: false,
     assetId,
     processedAssetId: payload.processedAssetId,
+    imageDataUrl,
     alphaPreserved: true,
     cropped: true,
+    outputBytes: Number.isFinite(Number(payload.outputBytes)) ? Number(payload.outputBytes) : 0,
     durationMs: Number.isFinite(Number(payload.durationMs)) ? Number(payload.durationMs) : 0,
   };
 }
@@ -310,6 +313,14 @@ function normalizeConfidence(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return 0;
   return Math.max(0, Math.min(1, numeric));
+}
+
+function normalizePngDataUrl(value) {
+  if (typeof value !== "string" || !value) return null;
+  if (!value.startsWith("data:image/png;base64,")) {
+    throw problem("provider_bad_response", "rembg no devolvio imageDataUrl PNG valido", 502);
+  }
+  return value;
 }
 
 function normalizeSecret(value) {

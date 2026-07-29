@@ -430,3 +430,84 @@ Limitacion honesta:
 Con `MIRRORA_AI_BACKGROUND_PROVIDER=simulated`, la UI valida el circuito completo pero
 no genera alfa nuevo. El PNG transparente real queda condicionado a desplegar
 `mirrora-rembg-service` y configurar `MIRRORA_AI_BACKGROUND_PROVIDER=rembg`.
+
+## Fase 5D: validacion rembg real
+
+Objetivo: comprobar que una prenda real subida desde MIRRORA vuelve como PNG
+transparente recortado generado por `rembg`, no por simulacion.
+
+Cambio de contrato necesario para cerrar 5D:
+
+```json
+{
+  "schema": "mirrora-background-removal-result/v0.1",
+  "provider": "rembg",
+  "model": "u2net_cloth_seg",
+  "processedAssetId": "local-garment:transparent:abc123",
+  "alphaPreserved": true,
+  "cropped": true,
+  "imageDataUrl": "data:image/png;base64,...",
+  "outputBytes": 123456,
+  "durationMs": 1200
+}
+```
+
+`imageDataUrl` es obligatorio para validar experiencia sin R2: permite que el frontend
+muestre el despues real y anada el PNG transparente al canvas en la misma sesion. No es
+persistencia definitiva y no debe usarse para fotos personales permanentes.
+
+Despliegue separado:
+
+```text
+Railway service A: MIRRORA-Style-Studio
+-> bridge Node existente
+-> npm run start:bridge
+-> /health
+
+Railway service B: mirrora-rembg-service
+-> Dockerfile.rembg
+-> /health
+-> rembg + u2net_cloth_seg
+```
+
+Orden de activacion:
+
+1. Desplegar `mirrora-rembg-service` con `Dockerfile.rembg`.
+2. Validar `GET /health` del servicio rembg.
+3. Activar en el bridge:
+
+```text
+MIRRORA_AI_BACKGROUND_PROVIDER=rembg
+MIRRORA_REMBG_ORIGIN=https://<dominio-rembg>
+MIRRORA_REMBG_TOKEN=<mismo secreto interno>
+MIRRORA_REMBG_TIMEOUT_MS=60000
+```
+
+4. Redeploy del bridge.
+5. Probar desde Vercel preview:
+
+```text
+Armario -> Subir foto de prenda -> procesar
+-> ficha Antes/Despues
+-> estado PNG transparente generado por rembg
+-> Anadir al lienzo
+-> mover / escalar / rotar / capas
+-> borrar temporal
+```
+
+Criterios de cierre 5D:
+
+- `/health` de `mirrora-rembg-service` en verde.
+- `/api/ai-closet/remove-background` devuelve `provider: "rembg"` y
+  `simulated: false`.
+- La respuesta contiene `imageDataUrl` con prefijo `data:image/png;base64,`.
+- El canvas usa esa imagen procesada y no la original.
+- Validado con prenda blanca, prenda oscura y al menos un borde fino.
+- Error controlado por token invalido, formato invalido y archivo superior al limite.
+
+Fuera de alcance:
+
+- R2 y URLs publicas.
+- Fotos personales permanentes.
+- Try-on.
+- Kling/Higgsfield.

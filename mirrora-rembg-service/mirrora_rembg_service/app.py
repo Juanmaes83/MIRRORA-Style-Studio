@@ -56,8 +56,9 @@ def create_app() -> FastAPI:
             return JSONResponse(result, status_code=200)
         except RemovalError as caught:
             return JSONResponse(error(caught.code, str(caught)), status_code=caught.status)
-        except Exception:
-            return JSONResponse(error("invalid_request", "Solicitud de rembg invalida"), status_code=400)
+        except Exception as caught:
+            print(f"rembg provider failure: {caught}", flush=True)
+            return JSONResponse(error("provider_failed", "rembg no pudo procesar la imagen"), status_code=502)
 
     return app
 

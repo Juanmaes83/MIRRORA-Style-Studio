@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
@@ -103,7 +103,12 @@ def remove_background(
     config.output_dir.mkdir(parents=True, exist_ok=True)
     processed_asset_id = f"{asset_id}:transparent:{uuid4().hex[:12]}"
     output_path = config.output_dir / f"{processed_asset_id.replace(':', '-')}.png"
-    cropped.save(output_path, format="PNG")
+    output_buffer = BytesIO()
+    cropped.save(output_buffer, format="PNG")
+    output_bytes = output_buffer.getvalue()
+    if len(output_bytes) > config.max_bytes:
+        raise RemovalError("processed_asset_too_large", "El PNG procesado supera el limite permitido", 413)
+    output_path.write_bytes(output_bytes)
 
     return {
         "schema": RESULT_SCHEMA,
@@ -112,6 +117,8 @@ def remove_background(
         "processedAssetId": processed_asset_id,
         "alphaPreserved": True,
         "cropped": True,
+        "imageDataUrl": f"data:image/png;base64,{b64encode(output_bytes).decode('ascii')}",
+        "outputBytes": len(output_bytes),
         "outputPath": str(output_path),
         "durationMs": int((perf_counter() - started) * 1000),
     }
