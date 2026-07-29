@@ -54,11 +54,14 @@ Los tests usan mock, por tanto no consumen credito ni requieren red. Falta confi
 `OPENAI_API_KEY` y `MIRRORA_AI_ASSET_PROVIDER=openai` en Railway staging para medir
 calidad visual, latencia y coste con 1-2 prendas autorizadas.
 
-**Fase 5C - eliminacion de fondo y recorte con `rembg`: registrada, no iniciada.** El
-repo candidato es `Juanmaes83/rembg`, fork MIT de `danielgatis/rembg`. Se integrara como
-servicio backend aislado o adaptador Python, nunca en frontend ni como dependencia de
-Vercel. Objetivo: generar PNG transparente y recorte limpio para prendas reales
-autorizadas usando modelos como `u2net_cloth_seg`, con coste, memoria y calidad medidos.
+**Fase 5C.1/5C.2 - base `rembg` y adaptador bridge: implementadas en codigo; pendiente
+de despliegue/validacion real.** El repo candidato es `Juanmaes83/rembg`, fork MIT de
+`danielgatis/rembg`. La base vive en `mirrora-rembg-service` como servicio Python/FastAPI
+aislado con `GET /health`, `POST /remove-background`, token interno, limites de formato
+y tamano, lectura restringida a fixtures `catalog/images`, recorte por alfa y resultado
+versionado. El bridge Node ya separa proveedores: `MIRRORA_AI_ASSET_PROVIDER` controla
+5B/OpenAI y `MIRRORA_AI_BACKGROUND_PROVIDER` controla 5C/rembg. Por defecto todo sigue
+en `simulated`.
 
 **Decision de producto para Fase 5C:** MIRRORA debe aceptar fotos reales de prendas y,
 mas adelante, fotos reales de cuerpo entero como maniqui privado. Para prendas, el flujo
@@ -69,9 +72,9 @@ composicion: consentimiento explicito, TTL, borrado verificable y ningun proveed
 almacenamiento publico sin aprobacion. Esto convierte el prototipo en un armario real sin
 romper la regla principal: todo procesamiento ocurre detras de `/api/ai-closet`.
 
-**Siguiente hito:** validar Fase 5B con una llamada real controlada. Despues, iniciar
-Fase 5C con `mirrora-rembg-service` para eliminacion de fondo y recorte, manteniendo
-Cloud/R2 y persistencia como decisiones separadas.
+**Siguiente hito:** desplegar/validar `mirrora-rembg-service` solo con 1 fixture de
+prenda autorizada. Despues continuar con Fase 5C.3 (prendas reales) y Fase 5C.4
+(personas/maniqui), manteniendo Cloud/R2 y persistencia como decisiones separadas.
 
 PWA de consumidor: motor de decisión y conversión para moda.
 

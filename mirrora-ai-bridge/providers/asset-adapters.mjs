@@ -1,25 +1,156 @@
 import { readFile } from "node:fs/promises";
 import { extname, resolve } from "node:path";
 
-const SUPPORTED_PROVIDERS = new Set(["simulated", "openai"]);
+const SUPPORTED_ASSET_PROVIDERS = new Set(["simulated", "openai"]);
+const SUPPORTED_BACKGROUND_PROVIDERS = new Set(["simulated", "rembg"]);
 
-export function createAssetAdapter({ provider = "simulated", env = process.env, fetchImpl = globalThis.fetch, readFileImpl = readFile, rootDir = process.cwd() } = {}) {
-  const selected = normalizeProvider(provider);
-  if (!SUPPORTED_PROVIDERS.has(selected)) {
-    throw problem("provider_not_supported", `Proveedor de assets no soportado: ${selected}`, 400);
+export function createAssetAdapter({
+  provider,
+  assetProvider,
+  backgroundProvider = "simulated",
+  env = process.env,
+  fetchImpl = globalThis.fetch,
+  readFileImpl = readFile,
+  rootDir = process.cwd(),
+} = {}) {
+  const selectedAssetProvider = normalizeProvider(assetProvider || provider || "simulated");
+  const selectedBackgroundProvider = normalizeProvider(backgroundProvider || "simulated");
+  if (!SUPPORTED_ASSET_PROVIDERS.has(selectedAssetProvider)) {
+    throw problem("provider_not_supported", `Proveedor de assets no soportado: ${selectedAssetProvider}`, 400);
   }
-  if (selected === "simulated") return createSimulatedAdapter();
-  return createOpenAiAssetAdapter({
+  if (!SUPPORTED_BACKGROUND_PROVIDERS.has(selectedBackgroundProvider)) {
+    throw problem("provider_not_supported", `Proveedor de fondo no soportado: ${selectedBackgroundProvider}`, 400);
+  }
+  const categorizationAdapter = selectedAssetProvider === "openai" ? createOpenAiAssetAdapter({
     apiKey: env.OPENAI_API_KEY,
     model: env.OPENAI_MODEL || "gpt-5-mini",
     fetchImpl,
     readFileImpl,
     rootDir,
-  });
+  }) : createSimulatedAdapter();
+  const backgroundAdapter = selectedBackgroundProvider === "rembg" ? createRembgBackgroundAdapter({
+    origin: env.MIRRORA_REMBG_ORIGIN,
+    token: env.MIRRORA_REMBG_TOKEN,
+    timeoutMs: env.MIRRORA_REMBG_TIMEOUT_MS,
+    fetchImpl,
+  }) : createSimulatedAdapter();
+
+  return {
+    async process(request) {
+      if (request.operation === "remove-background") return backgroundAdapter.process(request);
+      return categorizationAdapter.process(request);
+    },
+  };
 }
 
 export function readAssetProvider(env = process.env) {
   return normalizeProvider(env.MIRRORA_AI_ASSET_PROVIDER || "simulated");
+}
+
+export function createRembgBackgroundAdapter({
+  origin,
+  token,
+  timeoutMs = 20_000,
+  fetchImpl = globalThis.fetch,
+} = {}) {
+  const endpoint = normalizeOrigin(origin);
+  const bridgeToken = normalizeSecret(token);
+  const timeout = normalizeTimeout(timeoutMs);
+  if (!endpoint || !bridgeToken) {
+    return {
+      async process() {
+        throw problem("provider_not_configured", "MIRRORA_REMBG_ORIGIN y MIRRORA_REMBG_TOKEN requeridos para MIRRORA_AI_BACKGROUND_PROVIDER=rembg", 503);
+      },
+    };
+  }
+  if (typeof fetchImpl !== "function") throw problem("provider_not_configured", "fetch requerido para rembg", 503);
+
+  return {
+    async process({ operation, assetId, fixture }) {
+      if (operation !== "remove-background") {
+        throw problem("unsupported_operation", "rembg solo esta habilitado para eliminacion de fondo en Fase 5C", 400);
+      }
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+      try {
+        const response = await fetchImpl(`${endpoint}/remove-background`, {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${bridgeToken}`,
+            "content-type": "application/json",
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            schema: "mirrora-background-removal-request/v0.1",
+            assetId,
+            source: fixture.source,
+            expectedContentType: mimeForPath(fixture.source || ""),
+          }),
+        });
+        const payload = await readJsonResponse(response, "rembg");
+        return normalizeRembgResult(payload, assetId);
+      } catch (caught) {
+        if (caught?.name === "AbortError") throw problem("provider_timeout", "rembg supero el timeout configurado", 504);
+        throw caught;
+      } finally {
+        clearTimeout(timer);
+      }
+    },
+  };
+}
+
+export function normalizeRembgResult(payload, assetId) {
+  if (payload?.schema !== "mirrora-background-removal-result/v0.1") {
+    throw problem("provider_bad_response", "rembg devolvio un schema inesperado", 502);
+  }
+  if (!payload.alphaPreserved || !payload.cropped || typeof payload.processedAssetId !== "string") {
+    throw problem("provider_bad_response", "rembg no devolvio un PNG transparente recortado valido", 502);
+  }
+  return {
+    schema: "mirrora-background-removal-result/v0.1",
+    provider: "rembg",
+    model: normalizeMetadataValue(payload.model || "u2net_cloth_seg"),
+    simulated: false,
+    assetId,
+    processedAssetId: payload.processedAssetId,
+    alphaPreserved: true,
+    cropped: true,
+    durationMs: Number.isFinite(Number(payload.durationMs)) ? Number(payload.durationMs) : 0,
+  };
+}
+
+async function readJsonResponse(response, providerName) {
+  const text = await response.text();
+  let payload;
+  try { payload = text ? JSON.parse(text) : {}; }
+  catch { throw problem("provider_bad_response", `${providerName} devolvio JSON invalido`, 502); }
+  if (!response.ok) {
+    const message = payload?.error?.message || `${providerName} respondio ${response.status}`;
+    throw problem(payload?.error?.code || "provider_failed", message, response.status);
+  }
+  return payload;
+}
+
+function normalizeOrigin(value) {
+  const origin = normalizeSecret(value);
+  return origin ? origin.replace(/\/+$/, "") : "";
+}
+
+function normalizeTimeout(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return 20_000;
+  return Math.min(Math.max(numeric, 1_000), 120_000);
+}
+
+export function createLegacyProviderAdapter({ provider = "simulated", env = process.env, fetchImpl = globalThis.fetch, readFileImpl = readFile, rootDir = process.cwd() } = {}) {
+  return createAssetAdapter({
+    assetProvider: provider,
+    backgroundProvider: provider === "rembg" ? "rembg" : "simulated",
+    env,
+    fetchImpl,
+    readFileImpl,
+    rootDir,
+  });
 }
 
 export function createOpenAiAssetAdapter({ apiKey, model = "gpt-5-mini", fetchImpl = globalThis.fetch, readFileImpl = readFile, rootDir = process.cwd() } = {}) {

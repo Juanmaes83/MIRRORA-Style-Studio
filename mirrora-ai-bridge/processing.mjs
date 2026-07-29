@@ -56,9 +56,18 @@ export function createProcessingService({ adapter = createSimulatedAdapter(), au
 
 export function createProcessingServiceFromEnv({ env = process.env, now = () => Date.now(), fetchImpl = globalThis.fetch } = {}) {
   return createProcessingService({
-    adapter: createAssetAdapter({ provider: readAssetProvider(env), env, fetchImpl }),
+    adapter: createAssetAdapter({
+      assetProvider: readAssetProvider(env),
+      backgroundProvider: readBackgroundProvider(env),
+      env,
+      fetchImpl,
+    }),
     now,
   });
+}
+
+export function readBackgroundProvider(env = process.env) {
+  return String(env.MIRRORA_AI_BACKGROUND_PROVIDER || "simulated").trim().toLowerCase();
 }
 
 function problem(code, message, status) { return Object.assign(new Error(message), { code, status }); }

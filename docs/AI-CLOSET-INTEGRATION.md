@@ -248,8 +248,33 @@ Contrato de respuesta previsto:
 }
 ```
 
-Fase 5C queda registrada como siguiente pieza para eliminacion de fondo real y recorte,
-pero no esta implementada ni cerrada.
+Fase 5C.1/5C.2 queda implementada en codigo, pero no cerrada operativamente hasta
+desplegar el servicio, procesar una prenda real autorizada y documentar calidad visual,
+latencia, memoria y coste.
+
+Variables del bridge para activar rembg:
+
+```text
+MIRRORA_AI_BACKGROUND_PROVIDER=rembg
+MIRRORA_REMBG_ORIGIN=<origen server-side del servicio rembg>
+MIRRORA_REMBG_TOKEN=<secreto interno compartido con rembg>
+MIRRORA_REMBG_TIMEOUT_MS=20000
+```
+
+Variables del servicio `mirrora-rembg-service`:
+
+```text
+MIRRORA_REMBG_TOKEN=<secreto interno>
+MIRRORA_REMBG_MODEL=u2net_cloth_seg
+MIRRORA_REMBG_MAX_BYTES=8388608
+MIRRORA_REMBG_OUTPUT_DIR=/tmp/mirrora-rembg
+MIRRORA_REMBG_ROOT_DIR=.
+PORT=7000
+```
+
+Regla de aislamiento: `MIRRORA_AI_ASSET_PROVIDER=openai` puede estar activo para
+categorizacion mientras `MIRRORA_AI_BACKGROUND_PROVIDER=simulated` o `rembg` controla
+eliminacion de fondo. 5B y 5C no comparten proveedor ni credenciales.
 
 ### Argumentacion: prendas reales
 
@@ -324,7 +349,7 @@ Reglas obligatorias para personas:
 
 ### Como se hara sin romper la plataforma
 
-Fase 5C se implementara como modulo puente, no como reescritura de MIRRORA:
+Fase 5C se implementa como modulo puente, no como reescritura de MIRRORA:
 
 ```text
 MIRRORA PWA
@@ -339,3 +364,10 @@ normaliza resultados. `mirrora-rembg-service` hace solo una cosa: quitar fondo y
 un asset transparente/cortado. La persistencia definitiva, Cloud/R2 y try-on privado
 siguen siendo decisiones separadas para evitar mezclar seguridad, coste y datos personales
 en el mismo cambio.
+
+Estado actual:
+
+- 5C.1 base segura: implementada en `mirrora-rembg-service`.
+- 5C.2 adaptador bridge: implementado con `MIRRORA_AI_BACKGROUND_PROVIDER`.
+- 5C.3 prendas reales: pendiente de validacion visual y UI/upload.
+- 5C.4 personas/maniqui: pendiente de consentimiento, TTL y borrado verificable.
