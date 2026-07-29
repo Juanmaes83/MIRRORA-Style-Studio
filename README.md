@@ -54,8 +54,15 @@ Los tests usan mock, por tanto no consumen credito ni requieren red. Falta confi
 `OPENAI_API_KEY` y `MIRRORA_AI_ASSET_PROVIDER=openai` en Railway staging para medir
 calidad visual, latencia y coste con 1-2 prendas autorizadas.
 
-**Siguiente hito:** validar Fase 5B con una llamada real controlada y decidir despues si
-activar eliminacion de fondo real o mantenerla simulada hasta seleccionar proveedor.
+**Fase 5C - eliminacion de fondo y recorte con `rembg`: registrada, no iniciada.** El
+repo candidato es `Juanmaes83/rembg`, fork MIT de `danielgatis/rembg`. Se integrara como
+servicio backend aislado o adaptador Python, nunca en frontend ni como dependencia de
+Vercel. Objetivo: generar PNG transparente y recorte limpio para prendas reales
+autorizadas usando modelos como `u2net_cloth_seg`, con coste, memoria y calidad medidos.
+
+**Siguiente hito:** validar Fase 5B con una llamada real controlada. Despues, iniciar
+Fase 5C con `mirrora-rembg-service` para eliminacion de fondo y recorte, manteniendo
+Cloud/R2 y persistencia como decisiones separadas.
 
 PWA de consumidor: motor de decisión y conversión para moda.
 

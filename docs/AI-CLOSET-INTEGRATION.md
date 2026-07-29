@@ -190,3 +190,63 @@ OPENAI_MODEL=gpt-5-mini
 
 Fase 5B queda implementada tecnicamente, pero no cerrada operativamente hasta ejecutar
 una llamada real con fixture autorizado y documentar calidad visual, latencia y coste.
+
+## Fase 5C: eliminacion de fondo y recorte con rembg
+
+Repo registrado: `Juanmaes83/rembg` (`https://github.com/Juanmaes83/rembg`). Es un fork
+de `danielgatis/rembg`, licencia MIT, orientado a quitar fondos desde CLI, libreria
+Python, servidor HTTP o Docker.
+
+Encaje previsto:
+
+```text
+MIRRORA PWA
+-> /api/ai-closet
+-> mirrora-ai-bridge
+-> mirrora-rembg-service
+-> PNG transparente + recorte
+```
+
+La integracion se hara como servicio backend aislado, no dentro del navegador y no como
+parte de la Function de Vercel. El bridge Node seguira siendo la unica frontera publica y
+llamara al servicio rembg por red privada o endpoint server-side autorizado.
+
+Objetivo de Fase 5C:
+
+- Procesar solo fixtures/prendas autorizadas del catalogo.
+- Generar PNG con alfa real (`alphaPreserved: true`).
+- Recortar al bounding box no transparente para composicion en canvas.
+- Registrar `provider: "rembg"`, modelo, `durationMs`, intentos, estado y error code.
+- Comparar calidad en prendas blancas, sombras, bordes finos y tejidos oscuros.
+- Mantener fotos personales fuera de esta fase; try-on privado sigue siendo fase posterior.
+
+Modelo inicial a evaluar:
+
+```text
+u2net_cloth_seg
+```
+
+Riesgos y controles:
+
+- Peso y memoria de ONNX Runtime: desplegar separado del bridge Node.
+- Primera llamada lenta por carga/descarga de modelo: medir cold start.
+- Coste/creditos Railway: empezar con 1-2 fixtures y CPU.
+- Calidad variable por prenda: no cerrar 5C hasta validacion visual.
+- Persistencia y Cloud/R2: no se activan aqui; siguen como decision separada.
+
+Contrato de respuesta previsto:
+
+```json
+{
+  "schema": "mirrora-background-removal-result/v0.1",
+  "provider": "rembg",
+  "model": "u2net_cloth_seg",
+  "processedAssetId": "asset-id:transparent",
+  "alphaPreserved": true,
+  "cropped": true,
+  "durationMs": 1234
+}
+```
+
+Fase 5C queda registrada como siguiente pieza para eliminacion de fondo real y recorte,
+pero no esta implementada ni cerrada.
