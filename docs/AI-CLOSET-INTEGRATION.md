@@ -250,3 +250,92 @@ Contrato de respuesta previsto:
 
 Fase 5C queda registrada como siguiente pieza para eliminacion de fondo real y recorte,
 pero no esta implementada ni cerrada.
+
+### Argumentacion: prendas reales
+
+La necesidad principal no es crear dibujos ni iconos de prendas. MIRRORA debe permitir
+que una marca, estilista o usuario incorpore prendas reales del armario fisico o del
+catalogo fotografiado. La funcion de `rembg` en esta fase es transformar una foto normal
+en un asset usable por el sistema visual:
+
+```text
+foto real de prenda
+-> upload seguro a /api/ai-closet
+-> validacion de tipo, tamano, origen y consentimiento de uso
+-> mirrora-ai-bridge
+-> mirrora-rembg-service
+-> PNG transparente + recorte
+-> prenda procesada disponible en armario/canvas
+```
+
+Que conseguimos:
+
+- La coleccion deja de depender solo de assets ya preparados.
+- Una prenda fisica puede convertirse en objeto componible del canvas.
+- El canvas puede mover, escalar, ordenar y combinar imagenes reales con alfa.
+- La categorizacion de Fase 5B puede enriquecer despues la prenda con tipo, material,
+  color y metadata editorial.
+- El flujo se mantiene seguro: el navegador nunca recibe claves ni llama a proveedores.
+
+Controles minimos para aceptar la prenda:
+
+- Imagen subida por usuario autorizado o fixture de catalogo aprobado.
+- Formato permitido: `image/png`, `image/jpeg` o `image/webp`.
+- Limite de peso y dimensiones antes de procesar.
+- Resultado temporal hasta que se apruebe persistencia.
+- Borrado del asset temporal y del resultado procesado.
+- Registro de proveedor, modelo, duracion, estado, intentos y errores.
+
+### Argumentacion: personas y maniqui privado
+
+La foto de una persona tiene una naturaleza distinta a la foto de una prenda. Puede ser
+necesaria para usar una imagen de cuerpo entero como maniqui realista dentro del canvas,
+pero no debe tratarse como un asset ordinario de catalogo. En esta fase se documenta el
+flujo y las reglas; no se activa try-on privado ni persistencia publica.
+
+```text
+foto de cuerpo entero
+-> consentimiento explicito
+-> upload seguro a /api/ai-closet
+-> validacion de tipo, tamano y finalidad
+-> eliminacion opcional de fondo
+-> asset temporal privado
+-> uso como maniqui/referencia en canvas
+-> TTL + borrado verificable
+```
+
+Que conseguimos:
+
+- El usuario puede componer looks sobre una referencia humana realista, no sobre dibujos.
+- La experiencia se acerca al objetivo de armario personal sin prometer talla ni ajuste
+  fisico.
+- La misma interfaz puede soportar maniqui editorial, foto local o futura prueba privada.
+- Se mantiene separada la composicion editorial del try-on real con IA.
+
+Reglas obligatorias para personas:
+
+- Consentimiento claro antes de subir o procesar la foto.
+- Uso limitado a maniqui/referencia privada salvo aprobacion posterior.
+- TTL corto para foto original y resultado procesado.
+- Borrado verificable desde la interfaz o gateway.
+- No exposicion en URLs publicas indexables.
+- No almacenamiento permanente sin politica aprobada.
+- No uso para entrenar modelos ni compartir con proveedores fuera del contrato aceptado.
+
+### Como se hara sin romper la plataforma
+
+Fase 5C se implementara como modulo puente, no como reescritura de MIRRORA:
+
+```text
+MIRRORA PWA
+-> /api/ai-closet
+-> mirrora-ai-bridge
+-> mirrora-rembg-service
+-> resultado temporal versionado
+```
+
+El bridge conserva la frontera publica, valida payloads, aplica limites, emite jobs y
+normaliza resultados. `mirrora-rembg-service` hace solo una cosa: quitar fondo y devolver
+un asset transparente/cortado. La persistencia definitiva, Cloud/R2 y try-on privado
+siguen siendo decisiones separadas para evitar mezclar seguridad, coste y datos personales
+en el mismo cambio.

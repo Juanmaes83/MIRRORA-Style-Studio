@@ -60,6 +60,15 @@ servicio backend aislado o adaptador Python, nunca en frontend ni como dependenc
 Vercel. Objetivo: generar PNG transparente y recorte limpio para prendas reales
 autorizadas usando modelos como `u2net_cloth_seg`, con coste, memoria y calidad medidos.
 
+**Decision de producto para Fase 5C:** MIRRORA debe aceptar fotos reales de prendas y,
+mas adelante, fotos reales de cuerpo entero como maniqui privado. Para prendas, el flujo
+esperado es subir o capturar una foto del armario fisico, quitar el fondo, recortar el
+contorno util, guardar un PNG transparente y permitir su uso inmediato en armario/canvas.
+Para personas, la foto de cuerpo entero solo debe actuar como referencia privada de
+composicion: consentimiento explicito, TTL, borrado verificable y ningun proveedor ni
+almacenamiento publico sin aprobacion. Esto convierte el prototipo en un armario real sin
+romper la regla principal: todo procesamiento ocurre detras de `/api/ai-closet`.
+
 **Siguiente hito:** validar Fase 5B con una llamada real controlada. Despues, iniciar
 Fase 5C con `mirrora-rembg-service` para eliminacion de fondo y recorte, manteniendo
 Cloud/R2 y persistencia como decisiones separadas.
