@@ -13,11 +13,16 @@ import { AVATAR_OPTIONS, avatarSVG } from "./avatar.js";
 import { BRAND, formatPrice } from "./data/brand.js";
 import { track } from "./analytics.js";
 import { buildHandoffURL, renderQR, readIncomingHandoff } from "./qr-handoff.js";
+import { buildAssetPayload, createAiClosetGateway } from "./ai-closet-gateway.js";
 
 const $ = sel => document.querySelector(sel);
 const $$ = sel => [...document.querySelectorAll(sel)];
 const external = () => CATALOG_META.source === "external";
 let localMannequinUrl = null;
+const aiClosetGateway = createAiClosetGateway();
+const LOCAL_GARMENT_MAX_BYTES = 8 * 1024 * 1024;
+const LOCAL_GARMENT_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+const localGarments = [];
 
 /* ================= Navegación ================= */
 
@@ -478,25 +483,98 @@ function placementFor(item) {
   return PLACEMENT_PRESETS[item.part] || { x: 50, y: 50, scale: 0.7, zIndex: 35, width: 30 };
 }
 
+function allClosetItems() {
+  return [...localGarments, ...PRODUCTS];
+}
+
+function findClosetItem(id) {
+  return localGarments.find(item => item.id === id) || findItem(id);
+}
+
+function localCategoryLabel(category) {
+  if (category === "uploads") return "Subidas";
+  return PRODUCTS.find(item => item.category === category)?.line || category;
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolveFile, rejectFile) => {
+    const reader = new FileReader();
+    reader.onload = () => resolveFile(String(reader.result || ""));
+    reader.onerror = () => rejectFile(new Error("No se pudo leer la imagen"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function validateLocalGarment(file) {
+  if (!file) throw new Error("Selecciona una foto de prenda");
+  if (!LOCAL_GARMENT_TYPES.has(file.type)) throw new Error("Formato no permitido. Usa JPEG, PNG o WebP");
+  if (file.size > LOCAL_GARMENT_MAX_BYTES) throw new Error("La imagen supera el limite de 8 MB");
+}
+
+function statusTextForUpload(job, file) {
+  if (job.status === "completed" && job.result?.simulated === false) return "PNG transparente generado por rembg";
+  if (job.status === "completed") return "Procesado simulado: listo para validar flujo";
+  if (job.status === "failed") return job.error?.message || "No se pudo procesar la prenda";
+  return `Procesando ${file.name}`;
+}
+
+async function processLocalGarment(file) {
+  validateLocalGarment(file);
+  const dataUrl = await readFileAsDataUrl(file);
+  const assetId = `local-garment-${Date.now().toString(36)}`;
+  const payload = buildAssetPayload(assetId, {
+    upload: { fileName: file.name, contentType: file.type, size: file.size, dataUrl },
+  });
+  const job = await aiClosetGateway.removeBackground(payload, assetId);
+  const image = job.result?.imageDataUrl || dataUrl;
+  const item = {
+    id: assetId,
+    name: file.name.replace(/\.[^.]+$/, "") || "Prenda local",
+    line: "Prenda subida",
+    category: "uploads",
+    material: job.result?.simulated ? "validacion local" : "PNG transparente",
+    part: "upperbody",
+    image,
+    sourceImage: dataUrl,
+    processedAssetId: job.result?.processedAssetId || null,
+    processingStatus: statusTextForUpload(job, file),
+    simulated: job.result?.simulated !== false,
+  };
+  localGarments.unshift(item);
+  state.aiCloset.filter = "uploads";
+  state.aiCloset.activeItemId = item.id;
+  save();
+  return item;
+}
+
 function renderCloset() {
   const closet = state.aiCloset;
-  const filters = [["all", "Todo"], ...[...new Set(PRODUCTS.map(item => item.category))].map(category => [category, PRODUCTS.find(item => item.category === category)?.line || category])];
-  const visible = closet.filter === "all" ? PRODUCTS : PRODUCTS.filter(item => item.category === closet.filter);
+  const allItems = allClosetItems();
+  const categories = [...new Set(allItems.map(item => item.category).filter(Boolean))];
+  const filters = [["all", "Todo"], ...categories.map(category => [category, localCategoryLabel(category)])];
+  const visible = closet.filter === "all" ? allItems : allItems.filter(item => item.category === closet.filter);
   $("#closet-filters").innerHTML = `<div class="closet-filter-list">${filters.map(([id, label]) => `<button class="chip ${closet.filter === id ? "is-on" : ""}" data-closet-filter="${id}">${label}</button>`).join("")}</div>`;
-  $("#closet-grid").innerHTML = visible.map(item => `<button class="closet-card ${closet.activeItemId === item.id ? "is-active" : ""}" data-closet-item="${item.id}"><span class="closet-art"><img src="${item.image}" alt="" /></span><span><strong>${item.name}</strong><small>${item.material || item.category} / activo</small></span></button>`).join("");
-  const active = findItem(closet.activeItemId) || PRODUCTS[0];
+  $("#closet-grid").innerHTML = `<div class="garment-upload">
+    <label for="garment-input">Subir foto de prenda</label>
+    <input id="garment-input" type="file" accept="image/png,image/jpeg,image/webp" />
+    <small>JPEG, PNG o WebP. Maximo 8 MB. Sin R2: asset temporal de validacion.</small>
+    <p id="garment-upload-status" class="upload-status"></p>
+  </div>${visible.map(item => `<button class="closet-card ${closet.activeItemId === item.id ? "is-active" : ""}" data-closet-item="${item.id}"><span class="closet-art"><img src="${item.image}" alt="" /></span><span><strong>${item.name}</strong><small>${item.material || item.category} / activo</small></span></button>`).join("")}`;
+  const active = findClosetItem(closet.activeItemId) || allItems[0];
   const onCanvas = closet.canvasItems.some(entry => entry.itemId === active.id);
   const transform = closet.canvasItems.find(entry => entry.itemId === active.id);
   const transformControls = transform ? `<div class="transform-controls"><span>Transformar prenda</span><output>Escala ${Math.round(transform.scale * 100)}% / giro ${transform.rotation}deg / capa ${transform.zIndex}</output><div><button data-transform="scale-down">- Tamano</button><button data-transform="scale-up">+ Tamano</button></div><div><button data-transform="rotate-left">Girar izq.</button><button data-transform="rotate-right">Girar der.</button></div><div><button data-transform="back">Enviar atras</button><button data-transform="front">Traer delante</button></div><button class="danger-link" data-transform="remove">Quitar del lienzo</button></div>` : "";
-  $("#closet-detail").innerHTML = `<p class="detail-kicker">Catalogo real / ${active.line}</p><div class="detail-art"><img src="${active.image}" alt="${active.name}" /></div><h3>${active.name}</h3><p>${active.category} / ${active.material || "sin material"}</p><span class="detail-status">Asset aprobado</span><button class="btn btn-primary btn-block" data-canvas-add="${active.id}">${onCanvas ? "En el lienzo" : "Anadir al lienzo"}</button>${transformControls}<p class="detail-note">Imagen real de catalogo. El procesamiento IA se conectara mediante el bridge, nunca desde el navegador.</p>`;
-  const items = closet.canvasItems.filter(entry => findItem(entry.itemId));
+  const beforeAfter = active.sourceImage ? `<div class="before-after"><figure><img src="${active.sourceImage}" alt="Original ${active.name}" /><figcaption>Antes</figcaption></figure><figure><img src="${active.image}" alt="Procesada ${active.name}" /><figcaption>Despues</figcaption></figure></div>` : `<div class="detail-art"><img src="${active.image}" alt="${active.name}" /></div>`;
+  const removeLocal = active.sourceImage ? `<button class="danger-link btn-block local-delete" data-local-delete="${active.id}">Borrar temporal</button>` : "";
+  $("#closet-detail").innerHTML = `<p class="detail-kicker">${active.sourceImage ? "Prenda temporal" : "Catalogo real"} / ${active.line}</p>${beforeAfter}<h3>${active.name}</h3><p>${active.category} / ${active.material || "sin material"}</p><span class="detail-status">${active.processingStatus || "Asset aprobado"}</span><button class="btn btn-primary btn-block" data-canvas-add="${active.id}">${onCanvas ? "En el lienzo" : "Anadir al lienzo"}</button>${transformControls}${removeLocal}<p class="detail-note">Imagen real procesada mediante /api/ai-closet. Sin R2 ni persistencia permanente en esta fase.</p>`;
+  const items = closet.canvasItems.filter(entry => findClosetItem(entry.itemId));
   if (items.length !== closet.canvasItems.length) {
     closet.canvasItems = items;
     save();
   }
   $("#canvas-count").textContent = `${items.length} ${items.length === 1 ? "prenda" : "prendas"}`;
   const mannequin = localMannequinUrl ? `<img class="canvas-mannequin" src="${localMannequinUrl}" alt="Foto local usada como referencia de composicion" />` : `<div class="canvas-mannequin canvas-mannequin-placeholder" aria-hidden="true"></div>`;
-  $("#closet-canvas").innerHTML = `${mannequin}<div class="body-guides" aria-hidden="true"><i class="guide-shoulders"></i><i class="guide-waist"></i><i class="guide-hips"></i><i class="guide-feet"></i></div>${items.length ? items.map(entry => { const item = findItem(entry.itemId); const preset = placementFor(item); return `<button class="canvas-garment ${closet.activeItemId === entry.itemId ? "is-selected" : ""}" data-canvas-item="${entry.itemId}" style="--garment-width:${preset.width}%;left:${entry.x}%;top:${entry.y}%;z-index:${entry.zIndex};transform:translate(-50%,-50%) rotate(${entry.rotation}deg) scale(${entry.scale})"><img src="${item.image}" alt="${item.name}" /><span class="canvas-handle" aria-hidden="true"></span></button>`; }).join("") : `<div class="canvas-empty"><span>Selecciona una prenda del armario</span><small>Tu composicion aparecera aqui</small></div>`}`;
+  $("#closet-canvas").innerHTML = `${mannequin}<div class="body-guides" aria-hidden="true"><i class="guide-shoulders"></i><i class="guide-waist"></i><i class="guide-hips"></i><i class="guide-feet"></i></div>${items.length ? items.map(entry => { const item = findClosetItem(entry.itemId); const preset = placementFor(item); return `<button class="canvas-garment ${closet.activeItemId === entry.itemId ? "is-selected" : ""}" data-canvas-item="${entry.itemId}" style="--garment-width:${preset.width}%;left:${entry.x}%;top:${entry.y}%;z-index:${entry.zIndex};transform:translate(-50%,-50%) rotate(${entry.rotation}deg) scale(${entry.scale})"><img src="${item.image}" alt="${item.name}" /><span class="canvas-handle" aria-hidden="true"></span></button>`; }).join("") : `<div class="canvas-empty"><span>Selecciona una prenda del armario</span><small>Tu composicion aparecera aqui</small></div>`}`;
   $$("[data-canvas-item]").forEach(node => node.addEventListener("pointerdown", event => {
     const itemId = node.dataset.canvasItem; setActiveClosetItem(itemId); node.setPointerCapture(event.pointerId); const canvas = $("#closet-canvas");
     const move = next => { const box = canvas.getBoundingClientRect(); const x = Math.max(8, Math.min(92, ((next.clientX - box.left) / box.width) * 100)); const y = Math.max(8, Math.min(92, ((next.clientY - box.top) / box.height) * 100)); updateClosetCanvasItem(itemId, { x, y }); node.style.left = `${x}%`; node.style.top = `${y}%`; };
@@ -507,7 +585,18 @@ function renderCloset() {
 document.addEventListener("click", event => {
   const filter = event.target.closest("[data-closet-filter]"); if (filter) { setClosetFilter(filter.dataset.closetFilter); renderCloset(); return; }
   const item = event.target.closest("[data-closet-item]"); if (item) { setActiveClosetItem(item.dataset.closetItem); renderCloset(); return; }
-  const add = event.target.closest("[data-canvas-add]"); if (add) { const product = findItem(add.dataset.canvasAdd); addClosetItemToCanvas(product.id, placementFor(product)); renderCloset(); }
+  const add = event.target.closest("[data-canvas-add]"); if (add) { const product = findClosetItem(add.dataset.canvasAdd); addClosetItemToCanvas(product.id, placementFor(product)); renderCloset(); }
+  const localDelete = event.target.closest("[data-local-delete]");
+  if (localDelete) {
+    const index = localGarments.findIndex(entry => entry.id === localDelete.dataset.localDelete);
+    if (index >= 0) localGarments.splice(index, 1);
+    removeClosetCanvasItem(localDelete.dataset.localDelete);
+    state.aiCloset.activeItemId = PRODUCTS[0]?.id || null;
+    save();
+    renderCloset();
+    toast("Prenda temporal borrada");
+    return;
+  }
   const transform = event.target.closest("[data-transform]");
   if (transform) {
     const entry = state.aiCloset.canvasItems.find(item => item.itemId === state.aiCloset.activeItemId);
@@ -525,6 +614,22 @@ document.addEventListener("click", event => {
 });
 
 $("#closet-save").addEventListener("click", () => { saveClosetCanvas(); toast("Composicion guardada en este dispositivo"); });
+document.addEventListener("change", async event => {
+  if (event.target?.id !== "garment-input") return;
+  const status = $("#garment-upload-status");
+  const file = event.target.files?.[0];
+  try {
+    status.textContent = "Procesando prenda...";
+    const item = await processLocalGarment(file);
+    renderCloset();
+    toast(`${item.name} lista para el lienzo`);
+  } catch (caught) {
+    status.textContent = caught.message || "No se pudo procesar";
+    toast(status.textContent);
+  } finally {
+    event.target.value = "";
+  }
+});
 $("#mannequin-input").addEventListener("change", event => { const file = event.target.files?.[0]; if (!file) return; if (localMannequinUrl) URL.revokeObjectURL(localMannequinUrl); localMannequinUrl = URL.createObjectURL(file); $("#mannequin-remove").hidden = false; renderCloset(); });
 $("#mannequin-remove").addEventListener("click", () => { if (localMannequinUrl) URL.revokeObjectURL(localMannequinUrl); localMannequinUrl = null; $("#mannequin-input").value = ""; $("#mannequin-remove").hidden = true; renderCloset(); });
 

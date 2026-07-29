@@ -39,11 +39,11 @@ export function createBridge({ token, now = () => Date.now(), requestLimit = 30,
 
       if (request.method === "POST" && ["/api/ai-closet/categorize", "/api/ai-closet/remove-background"].includes(url.pathname)) {
         const body = await readJson(request);
-        assertAssetRequest(body);
+        assertAssetRequest(body, { allowUpload: url.pathname.endsWith("remove-background") });
         const operation = url.pathname.endsWith("categorize") ? "categorize" : "remove-background";
         const key = request.headers["idempotency-key"];
         if (key && idempotency.has(key)) return send(202, idempotency.get(key));
-        const job = await processing.start(operation, body.assetId);
+        const job = await processing.start(operation, body.assetId, body.upload ? localUploadFixture(body.upload) : null);
         if (key) idempotency.set(key, job);
         return send(202, job);
       }
@@ -108,10 +108,29 @@ async function readJson(request) {
   catch { throw Object.assign(new Error("JSON invalido"), { code: "invalid_json" }); }
 }
 
-function assertAssetRequest(body) {
+function assertAssetRequest(body, { allowUpload = false } = {}) {
   if (body?.schema !== ASSET_SCHEMA || typeof body.assetId !== "string" || !body.assetId.trim()) {
     throw Object.assign(new Error("assetId y schema de asset requeridos"), { code: "invalid_asset_request" });
   }
+  if (!body.upload) return;
+  if (!allowUpload) throw Object.assign(new Error("Upload solo permitido para eliminacion de fondo"), { code: "upload_not_allowed" });
+  const supported = new Set(["image/png", "image/jpeg", "image/webp"]);
+  if (!supported.has(body.upload.contentType) || !Number.isFinite(Number(body.upload.size)) || Number(body.upload.size) > 8 * 1024 * 1024 || typeof body.upload.dataUrl !== "string" || !body.upload.dataUrl.startsWith(`data:${body.upload.contentType};base64,`)) {
+    throw Object.assign(new Error("Upload de prenda invalido"), { code: "invalid_asset_upload" });
+  }
+}
+
+function localUploadFixture(upload) {
+  return {
+    source: upload.fileName || "uploaded-garment",
+    dataUrl: upload.dataUrl,
+    contentType: upload.contentType,
+    sourceSize: Number(upload.size),
+    category: "uploads",
+    garmentType: "uploaded-garment",
+    material: "unknown",
+    color: "unknown",
+  };
 }
 
 function assertTryOnRequest(body) {

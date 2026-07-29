@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from base64 import b64decode
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
@@ -56,6 +57,19 @@ def read_authorized_source(source: str, *, root_dir: Path, max_bytes: int) -> by
     if not absolute.exists():
         raise RemovalError("source_not_found", "Imagen fuente no encontrada", 404)
     data = absolute.read_bytes()
+    if len(data) > max_bytes:
+        raise RemovalError("asset_too_large", "La imagen supera el limite permitido", 413)
+    return data
+
+
+def read_data_url(data_url: str, *, content_type: str, max_bytes: int) -> bytes:
+    prefix = f"data:{content_type};base64,"
+    if not isinstance(data_url, str) or not data_url.startswith(prefix):
+        raise RemovalError("invalid_upload", "dataUrl no coincide con el contentType declarado")
+    try:
+        data = b64decode(data_url[len(prefix):], validate=True)
+    except Exception as exc:
+        raise RemovalError("invalid_upload", "Imagen base64 invalida") from exc
     if len(data) > max_bytes:
         raise RemovalError("asset_too_large", "La imagen supera el limite permitido", 413)
     return data

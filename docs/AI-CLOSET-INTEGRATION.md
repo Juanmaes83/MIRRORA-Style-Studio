@@ -369,5 +369,64 @@ Estado actual:
 
 - 5C.1 base segura: implementada en `mirrora-rembg-service`.
 - 5C.2 adaptador bridge: implementado con `MIRRORA_AI_BACKGROUND_PROVIDER`.
-- 5C.3 prendas reales: pendiente de validacion visual y UI/upload.
+- 5C.3 prendas reales: implementada como prototipo local con upload validado,
+  antes/despues, asset temporal, canvas y borrado.
 - 5C.4 personas/maniqui: pendiente de consentimiento, TTL y borrado verificable.
+
+### Fase 5C.3: prendas reales locales
+
+La UI de Armario acepta una foto local de prenda y la convierte en asset temporal del
+canvas sin persistencia permanente.
+
+Flujo implementado:
+
+```text
+input file local
+-> validacion frontend: JPEG/PNG/WebP, maximo 8 MB
+-> payload versionado ai-closet-asset-request/v0.1
+-> POST /api/ai-closet/remove-background
+-> validacion backend de tipo, tamano y data URL
+-> job de processing
+-> ficha antes/despues
+-> boton Anadir al lienzo
+-> mover, escalar, girar, capas, quitar del lienzo
+-> borrar temporal
+```
+
+Contrato extendido para upload local:
+
+```json
+{
+  "schema": "ai-closet-asset-request/v0.1",
+  "assetId": "local-garment-001",
+  "upload": {
+    "fileName": "camisa.png",
+    "contentType": "image/png",
+    "size": 123456,
+    "dataUrl": "data:image/png;base64,..."
+  }
+}
+```
+
+Controles implementados:
+
+- El upload solo se acepta para `remove-background`; `categorize` lo rechaza.
+- Formatos permitidos: `image/png`, `image/jpeg`, `image/webp`.
+- Limite de tamano: 8 MB.
+- Sin R2, sin URL publica y sin persistencia permanente.
+- Prenda local guardada solo en memoria de la sesion del navegador.
+- Borrado temporal elimina la prenda del listado y del canvas.
+
+Estado visual validado:
+
+- La seccion `Subidas` aparece tras cargar una prenda.
+- La ficha muestra comparacion `Antes` / `Despues`.
+- El item temporal entra en el canvas.
+- Los controles de escala y giro actualizan el item.
+- Viewport movil validado con el item en canvas.
+
+Limitacion honesta:
+
+Con `MIRRORA_AI_BACKGROUND_PROVIDER=simulated`, la UI valida el circuito completo pero
+no genera alfa nuevo. El PNG transparente real queda condicionado a desplegar
+`mirrora-rembg-service` y configurar `MIRRORA_AI_BACKGROUND_PROVIDER=rembg`.

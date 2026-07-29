@@ -84,7 +84,9 @@ export function createRembgBackgroundAdapter({
             schema: "mirrora-background-removal-request/v0.1",
             assetId,
             source: fixture.source,
-            expectedContentType: mimeForPath(fixture.source || ""),
+            dataUrl: fixture.dataUrl,
+            sourceSize: fixture.sourceSize,
+            expectedContentType: fixture.contentType || mimeForPath(fixture.source || ""),
           }),
         });
         const payload = await readJsonResponse(response, "rembg");
@@ -252,7 +254,9 @@ export function createSimulatedAdapter() {
         assetId,
         processedAssetId: `${assetId}:transparent`,
         source: fixture.source,
-        alphaPreserved: true,
+        imageDataUrl: fixture.dataUrl || null,
+        alphaPreserved: !fixture.dataUrl,
+        cropped: !fixture.dataUrl,
       };
       throw problem("unsupported_operation", "Operacion de procesado no soportada", 400);
     },

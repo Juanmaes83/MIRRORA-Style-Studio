@@ -11,8 +11,8 @@ export const AUTHORIZED_FIXTURES = new Map([
 export function createProcessingService({ adapter = createSimulatedAdapter(), authorizedFixtures = AUTHORIZED_FIXTURES, now = () => Date.now() } = {}) {
   const jobs = new Map();
 
-  async function start(operation, assetId) {
-    const fixture = authorizedFixtures.get(assetId);
+  async function start(operation, assetId, fixtureOverride = null) {
+    const fixture = fixtureOverride || authorizedFixtures.get(assetId);
     if (!fixture) throw problem("asset_not_authorized", "El asset no pertenece al set de prueba autorizado", 403);
     const job = { schema: "mirrora-processing-job/v0.1", jobId: `process-${randomUUID()}`, operation, assetId, attempts: 1, status: "running", createdAt: new Date(now()).toISOString() };
     jobs.set(job.jobId, job);

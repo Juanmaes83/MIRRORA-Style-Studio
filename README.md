@@ -72,9 +72,17 @@ composicion: consentimiento explicito, TTL, borrado verificable y ningun proveed
 almacenamiento publico sin aprobacion. Esto convierte el prototipo en un armario real sin
 romper la regla principal: todo procesamiento ocurre detras de `/api/ai-closet`.
 
-**Siguiente hito:** desplegar/validar `mirrora-rembg-service` solo con 1 fixture de
-prenda autorizada. Despues continuar con Fase 5C.3 (prendas reales) y Fase 5C.4
-(personas/maniqui), manteniendo Cloud/R2 y persistencia como decisiones separadas.
+**Fase 5C.3 - prendas reales locales: implementada en prototipo; pendiente de rembg real
+desplegado.** El armario permite subir una foto local de prenda (`JPEG`, `PNG` o `WebP`,
+maximo 8 MB), enviarla por `/api/ai-closet/remove-background`, mostrar antes/despues,
+crear una prenda temporal, anadirla al canvas, moverla, escalarla, girarla, ordenar capas
+y borrarla. Sin R2 ni persistencia permanente. Con proveedor `simulated` el resultado
+valida el flujo usando la imagen local; con `rembg` desplegado recibira PNG transparente
+real.
+
+**Siguiente hito:** desplegar/validar `mirrora-rembg-service` solo con 1 fixture o prenda
+autorizada. Despues continuar con Fase 5C.4 (personas/maniqui), manteniendo Cloud/R2 y
+persistencia como decisiones separadas.
 
 PWA de consumidor: motor de decisión y conversión para moda.
 

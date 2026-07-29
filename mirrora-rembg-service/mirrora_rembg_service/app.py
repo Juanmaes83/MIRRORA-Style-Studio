@@ -6,7 +6,7 @@ from pathlib import Path
 from fastapi import FastAPI, Header, Request
 from fastapi.responses import JSONResponse
 
-from .processing import RemovalConfig, RemovalError, read_authorized_source, remove_background, validate_payload
+from .processing import RemovalConfig, RemovalError, read_authorized_source, read_data_url, remove_background, validate_payload
 
 
 def normalize_secret(value: str | None) -> str:
@@ -48,7 +48,10 @@ def create_app() -> FastAPI:
         try:
             payload = await request.json()
             validate_payload(payload, config)
-            source_bytes = read_authorized_source(payload.get("source"), root_dir=root_dir, max_bytes=config.max_bytes)
+            if payload.get("dataUrl"):
+                source_bytes = read_data_url(payload.get("dataUrl"), content_type=payload["expectedContentType"], max_bytes=config.max_bytes)
+            else:
+                source_bytes = read_authorized_source(payload.get("source"), root_dir=root_dir, max_bytes=config.max_bytes)
             result = remove_background(source_bytes, asset_id=payload["assetId"], config=config)
             return JSONResponse(result, status_code=200)
         except RemovalError as caught:
