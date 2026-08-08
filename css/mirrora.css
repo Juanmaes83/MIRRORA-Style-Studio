@@ -399,6 +399,11 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 500; letter-spacing: 0.01em
 .closet-rail { padding:14px; }
 .closet-filter-list { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:14px; }
 .closet-grid { display:grid; gap:8px; max-height:570px; overflow:auto; }
+.garment-upload { display:grid; gap:8px; padding:10px; margin-bottom:6px; border:1px solid var(--line); border-radius:6px; background:var(--ivory); }
+.garment-upload label { font-weight:700; font-size:.78rem; }
+.garment-upload input { width:100%; font-size:.72rem; }
+.garment-upload small,.upload-status { color:var(--ink-soft); font-size:.72rem; line-height:1.35; }
+.upload-status { min-height:1em; }
 .closet-card { display:grid; grid-template-columns:54px 1fr; align-items:center; gap:10px; padding:8px; text-align:left; border:1px solid transparent; border-radius:6px; }
 .closet-card:hover,.closet-card.is-active { border-color:var(--brass); background:var(--ivory); }
 .closet-art img { width:48px; height:58px; display:block; object-fit:contain; }
@@ -412,6 +417,11 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 500; letter-spacing: 0.01em
 .body-guides { position:absolute; inset:4% 18%; pointer-events:none; z-index:5; }.body-guides i { position:absolute; left:50%; transform:translateX(-50%); border-top:1px dashed rgba(176,141,79,.55); width:42%; }.guide-shoulders { top:18%; }.guide-waist { top:43%; width:30% !important; }.guide-hips { top:57%; width:34% !important; }.guide-feet { top:87%; width:38% !important; }
 .canvas-garment { position:absolute; width:var(--garment-width,38%); height:42%; padding:5px; touch-action:none; cursor:grab; border:1px solid transparent; border-radius:6px; }.canvas-garment:active { cursor:grabbing; }.canvas-garment img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 16px 14px rgba(22,20,18,.18)); }.canvas-garment.is-selected { border-color:var(--brass); background:rgba(250,247,241,.55); }.canvas-handle { display:none; position:absolute; right:-7px; bottom:-7px; width:14px; height:14px; border-radius:50%; background:var(--brass); border:2px solid var(--ivory); }.canvas-garment.is-selected .canvas-handle { display:block; }
 .closet-detail { padding:16px; }.detail-kicker { font-size:.65rem; letter-spacing:.16em; text-transform:uppercase; color:var(--brass); }.detail-art { padding:12px 0; }.detail-art img { width:100%; height:210px; object-fit:contain; }.detail-status { display:inline-block; margin:10px 0; padding:4px 8px; border:1px solid var(--line); border-radius:999px; font-size:.7rem; }.detail-note { margin-top:14px; line-height:1.5; }
+.before-after { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0; }
+.before-after figure { display:grid; gap:6px; margin:0; padding:8px; border:1px solid var(--line); border-radius:6px; background:var(--ivory); text-align:center; }
+.before-after img { width:100%; height:120px; object-fit:contain; }
+.before-after figcaption { font-size:.62rem; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); }
+.local-delete { margin-top:10px; border:1px solid var(--line); border-radius:5px; padding:7px 8px; font-size:.72rem; }
 .transform-controls { display:grid; gap:7px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line); }.transform-controls span { font-size:.68rem; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-soft); }.transform-controls output { font-size:.72rem; color:var(--ink-soft); }.transform-controls div { display:grid; grid-template-columns:1fr 1fr; gap:6px; }.transform-controls button:hover { border-color:var(--brass); }.danger-link { color:#9b3838; }
 @media (max-width:1050px) { .closet-shell { grid-template-columns:230px 1fr; }.closet-detail { grid-column:1/-1; display:grid; grid-template-columns:120px 1fr; gap:12px; }.detail-art { grid-row:span 4; }.closet-detail .btn,.detail-note { grid-column:2; } }
 @media (max-width:700px) { .closet-head,.closet-shell { display:grid; grid-template-columns:1fr; }.closet-head .btn { width:100%; }.closet-grid { grid-template-columns:repeat(2,1fr); max-height:none; }.closet-card { grid-template-columns:42px 1fr; }.closet-art img { width:40px; }.closet-canvas { min-height:420px; }.closet-detail { display:block; }.canvas-garment { height:38%; } }

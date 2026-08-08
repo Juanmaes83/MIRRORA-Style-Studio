@@ -60,12 +60,21 @@ export function normalizeGatewayBaseUrl(baseUrl) {
   return value;
 }
 
-export function buildAssetPayload(assetId) {
+export function buildAssetPayload(assetId, options = {}) {
   if (typeof assetId !== "string" || !assetId.trim()) throw new Error("assetId requerido");
-  return {
+  const payload = {
     schema: "ai-closet-asset-request/v0.1",
     assetId: assetId.trim()
   };
+  if (options.upload) {
+    payload.upload = {
+      fileName: String(options.upload.fileName || "garment").trim(),
+      contentType: String(options.upload.contentType || "").trim(),
+      size: Number(options.upload.size),
+      dataUrl: String(options.upload.dataUrl || "")
+    };
+  }
+  return payload;
 }
 
 export function buildTryOnPayload({ session, lookId, itemIds, consentId, personAssetId }) {

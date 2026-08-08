@@ -2,17 +2,87 @@
 
 ## Estado de entrega
 
-**Fase 2R - Armario Real y Canvas Local: completada.**
+**Fase 2 - Diseno visual navegable: completada.**
 
 - El armario consume las imagenes reales de `catalog/catalog.json`; no usa prendas SVG.
+- El panel de detalle, el armario y los assets de catalogo real estan disponibles.
+
+**Fase 3 - Canvas funcional local: completada.**
+
 - El canvas permite foto local de cuerpo entero como referencia, mover, escalar, girar,
   ordenar capas, eliminar y guardar una composicion local.
 - La foto de referencia no se sube ni se persiste fuera del navegador y no es try-on.
 - El gateway de IA sigue siendo un contrato seguro sin claves de proveedor en frontend.
 
-**Siguiente fase:** `mirrora-ai-bridge` con respuestas simuladas, autenticacion,
-validacion, limites, healthcheck y contrato `/api/ai-closet`. La categorizacion,
-eliminacion de fondo y try-on solo se conectaran despues de validar ese bridge.
+**Fase 4A - `mirrora-ai-bridge` seguro sin IA: completada.**
+
+- Servicio Node aislado con `healthcheck`, autenticacion por token de entorno,
+  validacion de schemas, limite por ventana e idempotencia de peticiones.
+- Sus respuestas son simuladas y los jobs viven solo en memoria: no hay proveedor,
+  subida de archivos, almacenamiento, Cloud/R2 ni CORS de bucket en esta fase.
+- Ejecutar localmente con `MIRRORA_AI_BRIDGE_TOKEN=<token> npm run start:bridge`.
+
+**Fase 4B - preview same-origin: completada y validada en Vercel.** El servidor local
+entrega la PWA y encamina exclusivamente `/api/ai-closet` al bridge. El navegador no
+recibe el token; el proxy loopback lo inyecta en servidor. En Vercel, la Function
+`api/ai-closet/[...path].mjs` hace el mismo trabajo server-side contra Railway.
+Ejecutar localmente con `MIRRORA_AI_BRIDGE_TOKEN=<token> PORT=4181 npm run start:preview`.
+
+**Despliegue staging:** Railway ejecuta el bridge en `0.0.0.0:$PORT` y verifica
+`/health`. Vercel entrega la PWA y su Function `api/ai-closet/[...path].mjs` reenvia
+las rutas relativas al bridge. Sus dos variables server-side son
+`MIRRORA_AI_BRIDGE_ORIGIN` y `MIRRORA_AI_BRIDGE_TOKEN`; ninguna se expone al navegador.
+
+**Estado operativo de Fase 4:** 4A esta desplegada en Railway staging y 4B esta
+validada con preview same-origin en Vercel. El bridge activo en
+`https://mirrora-style-studio-staging.up.railway.app` confirma `status: "ok"` y
+`providers: "simulated"`. La preview de Vercel
+`https://mirrora-style-studio-git-featu-05e60a-juanma-espinosas-projects.vercel.app`
+responde correctamente a `/api/ai-closet/closet?campaign=vercel-preview` con schema
+`ai-closet-closet-response/v0.1` e `items: []`. No hay proveedor IA, clave de proveedor,
+foto personal, R2 ni Supabase conectados en este entorno.
+
+**Fase 5A - contrato y proveedor apagado: completada.** El bridge incluye un fixture real
+autorizado, un selector server-side de proveedor (`MIRRORA_AI_ASSET_PROVIDER`) y un
+adaptador simulado con categorizacion, resultado de fondo transparente, estado,
+reintento y borrado. El valor por defecto sigue siendo `simulated`.
+
+**Fase 5B - categorizacion OpenAI por adaptador: implementada en codigo; pendiente de
+validacion real en staging.** El adaptador `openai` usa Responses API desde backend,
+lee solo fixtures autorizados y normaliza metadata a `mirrora-garment-metadata/v0.1`.
+Los tests usan mock, por tanto no consumen credito ni requieren red. Falta configurar
+`OPENAI_API_KEY` y `MIRRORA_AI_ASSET_PROVIDER=openai` en Railway staging para medir
+calidad visual, latencia y coste con 1-2 prendas autorizadas.
+
+**Fase 5C.1/5C.2 - base `rembg` y adaptador bridge: implementadas en codigo; pendiente
+de despliegue/validacion real.** El repo candidato es `Juanmaes83/rembg`, fork MIT de
+`danielgatis/rembg`. La base vive en `mirrora-rembg-service` como servicio Python/FastAPI
+aislado con `GET /health`, `POST /remove-background`, token interno, limites de formato
+y tamano, lectura restringida a fixtures `catalog/images`, recorte por alfa y resultado
+versionado. El bridge Node ya separa proveedores: `MIRRORA_AI_ASSET_PROVIDER` controla
+5B/OpenAI y `MIRRORA_AI_BACKGROUND_PROVIDER` controla 5C/rembg. Por defecto todo sigue
+en `simulated`.
+
+**Decision de producto para Fase 5C:** MIRRORA debe aceptar fotos reales de prendas y,
+mas adelante, fotos reales de cuerpo entero como maniqui privado. Para prendas, el flujo
+esperado es subir o capturar una foto del armario fisico, quitar el fondo, recortar el
+contorno util, guardar un PNG transparente y permitir su uso inmediato en armario/canvas.
+Para personas, la foto de cuerpo entero solo debe actuar como referencia privada de
+composicion: consentimiento explicito, TTL, borrado verificable y ningun proveedor ni
+almacenamiento publico sin aprobacion. Esto convierte el prototipo en un armario real sin
+romper la regla principal: todo procesamiento ocurre detras de `/api/ai-closet`.
+
+**Fase 5C.3 - prendas reales locales: implementada en prototipo; pendiente de rembg real
+desplegado.** El armario permite subir una foto local de prenda (`JPEG`, `PNG` o `WebP`,
+maximo 8 MB), enviarla por `/api/ai-closet/remove-background`, mostrar antes/despues,
+crear una prenda temporal, anadirla al canvas, moverla, escalarla, girarla, ordenar capas
+y borrarla. Sin R2 ni persistencia permanente. Con proveedor `simulated` el resultado
+valida el flujo usando la imagen local; con `rembg` desplegado recibira PNG transparente
+real.
+
+**Siguiente hito:** desplegar/validar `mirrora-rembg-service` solo con 1 fixture o prenda
+autorizada. Despues continuar con Fase 5C.4 (personas/maniqui), manteniendo Cloud/R2 y
+persistencia como decisiones separadas.
 
 PWA de consumidor: motor de decisión y conversión para moda.
 

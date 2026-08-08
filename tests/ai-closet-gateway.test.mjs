@@ -20,6 +20,13 @@ test("builds only versioned and complete AI Closet request payloads", () => {
     schema: "ai-closet-asset-request/v0.1",
     assetId: "asset-1",
   });
+  assert.deepEqual(buildAssetPayload("asset-1", {
+    upload: { fileName: "shirt.png", contentType: "image/png", size: 123, dataUrl: "data:image/png;base64,AAAA" },
+  }), {
+    schema: "ai-closet-asset-request/v0.1",
+    assetId: "asset-1",
+    upload: { fileName: "shirt.png", contentType: "image/png", size: 123, dataUrl: "data:image/png;base64,AAAA" },
+  });
   assert.deepEqual(buildTryOnPayload({
     session: { brandId: "brand-1", campaignId: "campaign-1" },
     lookId: "look-1",

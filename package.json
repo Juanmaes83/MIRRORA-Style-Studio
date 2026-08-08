@@ -6,6 +6,9 @@
   "description": "MIRRORA Style Studio — PWA de decisión y conversión para moda",
   "scripts": {
     "dev": "npx serve . -l 4180",
-    "test": "node --test tests/ai-closet-gateway.test.mjs"
+    "start:bridge": "node mirrora-ai-bridge/server.mjs",
+    "start:preview": "node mirrora-ai-bridge/preview-server.mjs",
+    "test:bridge": "node --test mirrora-ai-bridge/server.test.mjs",
+    "test": "node --test tests/ai-closet-gateway.test.mjs mirrora-ai-bridge/server.test.mjs mirrora-ai-bridge/preview-server.test.mjs mirrora-ai-bridge/processing.test.mjs api/ai-closet/proxy.test.mjs"
   }
 }
